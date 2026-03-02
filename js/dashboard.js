@@ -218,6 +218,7 @@ function createReportCard(report) {
                 <div><strong>発生日時:</strong> ${occurredDate}</div>
                 <div><strong>報告者:</strong> ${employeeName}</div>
                 <div><strong>場所:</strong> ${report.location_text}</div>
+                <div><strong>荷物の種類:</strong> ${report.cargo_type || '-'}</div>
                 <div><strong>カテゴリ:</strong> ${categoryText}</div>
             </div>
             <div class="report-text">
@@ -369,6 +370,10 @@ function createDetailContent(report) {
             <div class="detail-row">
                 <div class="detail-label">発生場所</div>
                 <div class="detail-value">${report.location_text}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">荷物の種類</div>
+                <div class="detail-value">${report.cargo_type || '-'}</div>
             </div>
             <div class="detail-row">
                 <div class="detail-label">事象</div>
@@ -631,6 +636,7 @@ function exportToCSV() {
         '発生場所（テキスト）',
         'GPS緯度',
         'GPS経度',
+        '荷物の種類',  // ← 追加
         '事象カテゴリ',
         '何が起きたか（カテゴリ）',
         'カテゴリ補足メモ',
@@ -679,6 +685,7 @@ function exportToCSV() {
         report.location_text || report.location || '',
         report.location_lat || report.location_gps_lat || '',
         report.location_lng || report.location_gps_lng || '',
+        report.cargo_type || '',  // ← 追加
         report.incident_type || report.incident_category || '',
         Array.isArray(report.categories) ? report.categories.join('; ') : (report.what_happened_category || ''),
         report.memo || report.category_memo || '',

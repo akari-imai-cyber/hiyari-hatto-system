@@ -166,6 +166,9 @@ function displayReports(reports) {
                     <div class="report-info">
                         <strong>場所:</strong> ${report.location_text || '-'}
                     </div>
+                    <div class="report-info">
+                        <strong>荷物の種類:</strong> ${report.cargo_type || '-'}
+                    </div>
                     <div class="report-memo">
                         ${report.memo || '（メモなし）'}
                     </div>
@@ -249,6 +252,22 @@ function createEditForm(report) {
             </div>
             
             <div class="form-group">
+                <label>荷物の種類</label>
+                <select id="edit-cargo-type" class="form-control">
+                    <option value="">未選択</option>
+                    <option value="一般貨物" ${report.cargo_type === '一般貨物' ? 'selected' : ''}>一般貨物</option>
+                    <option value="冷凍・冷蔵品" ${report.cargo_type === '冷凍・冷蔵品' ? 'selected' : ''}>冷凍・冷蔵品</option>
+                    <option value="危険物" ${report.cargo_type === '危険物' ? 'selected' : ''}>危険物</option>
+                    <option value="精密機器" ${report.cargo_type === '精密機器' ? 'selected' : ''}>精密機器</option>
+                    <option value="建設資材" ${report.cargo_type === '建設資材' ? 'selected' : ''}>建設資材</option>
+                    <option value="食品" ${report.cargo_type === '食品' ? 'selected' : ''}>食品</option>
+                    <option value="医薬品" ${report.cargo_type === '医薬品' ? 'selected' : ''}>医薬品</option>
+                    <option value="衣類・繊維" ${report.cargo_type === '衣類・繊維' ? 'selected' : ''}>衣類・繊維</option>
+                    <option value="その他" ${report.cargo_type === 'その他' ? 'selected' : ''}>その他</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
                 <label>報告種別</label>
                 <select id="edit-report-type" class="form-control">
                     <option value="hiyari" ${report.report_type === 'hiyari' ? 'selected' : ''}>ヒヤリハット</option>
@@ -329,6 +348,7 @@ async function saveReport() {
             reporter_name: document.getElementById('edit-reporter-name').value,
             occurred_at: document.getElementById('edit-occurred-at').value,
             location_text: document.getElementById('edit-location').value,
+            cargo_type: document.getElementById('edit-cargo-type').value,  // ← 追加
             report_type: document.getElementById('edit-report-type').value,
             incident_type: document.getElementById('edit-incident-type').value,
             memo: document.getElementById('edit-memo').value,

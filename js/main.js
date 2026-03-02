@@ -332,6 +332,7 @@ function collectFormData() {
         reporter_name: document.getElementById('employee').value,
         occurred_at: document.getElementById('occurred-at').value,
         location_text: document.getElementById('location').value,
+        cargo_type: document.getElementById('cargo-type').value,  // 荷物の種類を追加
         incident_type: document.getElementById('incident-category').value,
         categories: selectedCategories,
         memo: document.getElementById('category-memo')?.value || '',
