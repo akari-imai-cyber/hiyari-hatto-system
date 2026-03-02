@@ -50,7 +50,24 @@ async function checkAuthentication() {
             return false;
         }
         
-        // 企業情報を取得
+        // 🔑 管理者の場合（先にチェック）
+        if (profile.role === 'admin') {
+            currentAuth = {
+                userId: session.user.id,
+                email: session.user.email,
+                companyCode: null,
+                companyId: null,
+                companyName: '管理者',
+                role: 'admin',
+                authenticated: true
+            };
+            
+            console.log('✅ 管理者認証済み:', currentAuth);
+            window.dispatchEvent(new CustomEvent('authComplete', { detail: currentAuth }));
+            return true;
+        }
+        
+        // 👥 企業ユーザーの場合（company_id が必要）
         if (profile.company_id) {
             const { data: company } = await window.supabaseClient
                 .from('companies')
@@ -76,23 +93,6 @@ async function checkAuthentication() {
                 
                 return true;
             }
-        }
-        
-        // 管理者の場合
-        if (profile.role === 'admin') {
-            currentAuth = {
-                userId: session.user.id,
-                email: session.user.email,
-                companyCode: null,
-                companyId: null,
-                companyName: '管理者',
-                role: 'admin',
-                authenticated: true
-            };
-            
-            console.log('✅ 管理者認証済み:', currentAuth);
-            window.dispatchEvent(new CustomEvent('authComplete', { detail: currentAuth }));
-            return true;
         }
         
         console.error('❌ 企業情報が不完全');
