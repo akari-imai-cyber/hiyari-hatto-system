@@ -250,11 +250,34 @@ async function submitStep1() {
 
 // STEP 2 へ進む
 async function goToStep2() {
+    console.log('🚀 STEP 2 へ進む処理開始');
+    
     if (!validateStep1()) {
+        console.warn('⚠️ STEP 1 バリデーション失敗');
         return;
     }
     
-    await collectFormData();
+    try {
+        console.log('📋 フォームデータ収集開始');
+        await collectFormData();
+        console.log('✅ フォームデータ収集完了:', reportData);
+        
+        // reportData.company_id が設定されているか確認
+        if (!reportData || (!reportData.company_id && reportData.company_id !== null)) {
+            console.error('❌ reportData が正しく設定されていません:', reportData);
+            alert('データの準備に失敗しました。ページをリロードして再度お試しください。');
+            return;
+        }
+        
+        console.log('✅ company_id 確認 OK:', reportData.company_id);
+        
+    } catch (error) {
+        console.error('❌ collectFormData エラー:', error);
+        alert('認証情報の取得に失敗しました。ページをリロードしてください。');
+        return;
+    }
+    
+    console.log('🎯 STEP 2 画面表示');
     
     // STEP2表示・STEP1非表示
     document.querySelector('#report-form > .card').classList.add('hidden');
@@ -320,37 +343,50 @@ async function collectFormData() {
     // 報告種別を取得（グローバル変数から）
     const reportType = window.currentReportType || 'hiyari';
     
-    // 認証情報から company_id を取得
-    let auth = window.getCurrentAuth ? window.getCurrentAuth() : null;
-    let companyId = auth ? auth.companyId : null;
+    // 認証情報から company_id を取得（必ずセッションから取得）
+    let companyId = null;
     
-    // company_id が取得できない場合、セッションから再取得
-    if (!companyId) {
-        console.warn('⚠️ currentAuth から company_id 取得失敗、セッションから再取得');
-        try {
-            const { data: { session } } = await window.supabaseClient.auth.getSession();
-            if (session) {
-                const { data: profile } = await window.supabaseClient
-                    .from('profiles')
-                    .select('company_id')
-                    .eq('id', session.user.id)
-                    .single();
-                
-                if (profile && profile.company_id) {
-                    companyId = profile.company_id;
-                    console.log('✅ セッションから company_id 取得成功:', companyId);
-                }
-            }
-        } catch (error) {
-            console.error('❌ セッション取得エラー:', error);
+    try {
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        
+        if (!session) {
+            console.error('❌ セッションが存在しません');
+            alert('ログインセッションが切れています。再度ログインしてください。');
+            throw new Error('セッションが存在しません');
         }
-    }
-    
-    if (!companyId) {
-        console.error('❌ 企業IDが取得できません');
-        alert('認証情報が取得できません。再度ログインしてください。');
-        window.location.href = 'index.html';
-        return;
+        
+        console.log('✅ セッション取得成功:', session.user.email);
+        
+        // プロフィールから company_id を取得
+        const { data: profile, error: profileError } = await window.supabaseClient
+            .from('profiles')
+            .select('company_id, role')
+            .eq('id', session.user.id)
+            .single();
+        
+        if (profileError || !profile) {
+            console.error('❌ プロフィール取得エラー:', profileError);
+            alert('ユーザー情報の取得に失敗しました。再度ログインしてください。');
+            throw new Error('プロフィール取得失敗');
+        }
+        
+        // 管理者の場合は company_id が null でも OK
+        if (profile.role === 'admin') {
+            console.log('✅ 管理者ユーザー: company_id は不要');
+            companyId = null; // 管理者は null で OK
+        } else if (profile.company_id) {
+            companyId = profile.company_id;
+            console.log('✅ company_id 取得成功:', companyId);
+        } else {
+            console.error('❌ company_id が設定されていません');
+            alert('企業情報が設定されていません。管理者に連絡してください。');
+            throw new Error('company_id が未設定');
+        }
+        
+    } catch (error) {
+        console.error('❌ 認証情報取得エラー:', error);
+        alert('認証情報の取得に失敗しました: ' + error.message);
+        throw error; // エラーを上位に伝播
     }
     
     reportData = {
