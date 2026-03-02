@@ -167,8 +167,12 @@ function displayReports(reports) {
                         <strong>場所:</strong> ${report.location_text || '-'}
                     </div>
                     <div class="report-info">
+                        <strong>車両種別:</strong> ${report.vehicle_type || '-'}
+                    </div>
+                    <div class="report-info">
                         <strong>荷物の種類:</strong> ${report.cargo_type || '-'}
                     </div>
+                    ${report.cargo_info ? `<div class="report-info"><strong>荷物情報:</strong> ${report.cargo_info}</div>` : ''}
                     <div class="report-memo">
                         ${report.memo || '（メモなし）'}
                     </div>
@@ -252,6 +256,15 @@ function createEditForm(report) {
             </div>
             
             <div class="form-group">
+                <label>車両種別</label>
+                <select id="edit-vehicle-type" class="form-control">
+                    <option value="">未選択</option>
+                    <option value="トラック" ${report.vehicle_type === 'トラック' ? 'selected' : ''}>トラック</option>
+                    <option value="フォークリフト" ${report.vehicle_type === 'フォークリフト' ? 'selected' : ''}>フォークリフト</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
                 <label>荷物の種類</label>
                 <select id="edit-cargo-type" class="form-control">
                     <option value="">未選択</option>
@@ -265,6 +278,12 @@ function createEditForm(report) {
                     <option value="衣類・繊維" ${report.cargo_type === '衣類・繊維' ? 'selected' : ''}>衣類・繊維</option>
                     <option value="その他" ${report.cargo_type === 'その他' ? 'selected' : ''}>その他</option>
                 </select>
+            </div>
+            
+            <div class="form-group">
+                <label>荷物情報（任意）</label>
+                <input type="text" id="edit-cargo-info" class="form-control" 
+                       value="${report.cargo_info || ''}" placeholder="例: 冷凍マグロ 500kg">
             </div>
             
             <div class="form-group">
@@ -348,7 +367,9 @@ async function saveReport() {
             reporter_name: document.getElementById('edit-reporter-name').value,
             occurred_at: document.getElementById('edit-occurred-at').value,
             location_text: document.getElementById('edit-location').value,
-            cargo_type: document.getElementById('edit-cargo-type').value,  // ← 追加
+            vehicle_type: document.getElementById('edit-vehicle-type').value,  // ← 追加
+            cargo_type: document.getElementById('edit-cargo-type').value,
+            cargo_info: document.getElementById('edit-cargo-info').value,  // ← 追加
             report_type: document.getElementById('edit-report-type').value,
             incident_type: document.getElementById('edit-incident-type').value,
             memo: document.getElementById('edit-memo').value,

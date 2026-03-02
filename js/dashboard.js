@@ -218,7 +218,9 @@ function createReportCard(report) {
                 <div><strong>発生日時:</strong> ${occurredDate}</div>
                 <div><strong>報告者:</strong> ${employeeName}</div>
                 <div><strong>場所:</strong> ${report.location_text}</div>
+                <div><strong>車両種別:</strong> ${report.vehicle_type || '-'}</div>
                 <div><strong>荷物の種類:</strong> ${report.cargo_type || '-'}</div>
+                ${report.cargo_info ? `<div><strong>荷物情報:</strong> ${report.cargo_info}</div>` : ''}
                 <div><strong>カテゴリ:</strong> ${categoryText}</div>
             </div>
             <div class="report-text">
@@ -372,9 +374,19 @@ function createDetailContent(report) {
                 <div class="detail-value">${report.location_text}</div>
             </div>
             <div class="detail-row">
+                <div class="detail-label">車両種別</div>
+                <div class="detail-value">${report.vehicle_type || '-'}</div>
+            </div>
+            <div class="detail-row">
                 <div class="detail-label">荷物の種類</div>
                 <div class="detail-value">${report.cargo_type || '-'}</div>
             </div>
+            ${report.cargo_info ? `
+            <div class="detail-row">
+                <div class="detail-label">荷物情報</div>
+                <div class="detail-value">${report.cargo_info}</div>
+            </div>
+            ` : ''}
             <div class="detail-row">
                 <div class="detail-label">事象</div>
                 <div class="detail-value">${report.what_happened_category || '-'}</div>
@@ -636,7 +648,9 @@ function exportToCSV() {
         '発生場所（テキスト）',
         'GPS緯度',
         'GPS経度',
-        '荷物の種類',  // ← 追加
+        '車両種別',  // ← 追加
+        '荷物の種類',
+        '荷物情報',  // ← 追加
         '事象カテゴリ',
         '何が起きたか（カテゴリ）',
         'カテゴリ補足メモ',
@@ -685,7 +699,9 @@ function exportToCSV() {
         report.location_text || report.location || '',
         report.location_lat || report.location_gps_lat || '',
         report.location_lng || report.location_gps_lng || '',
-        report.cargo_type || '',  // ← 追加
+        report.vehicle_type || '',  // ← 追加
+        report.cargo_type || '',
+        report.cargo_info || '',  // ← 追加
         report.incident_type || report.incident_category || '',
         Array.isArray(report.categories) ? report.categories.join('; ') : (report.what_happened_category || ''),
         report.memo || report.category_memo || '',
