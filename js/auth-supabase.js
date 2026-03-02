@@ -168,7 +168,15 @@ async function performLogin(emailInput, password) {
             return;
         }
         
-        // 企業情報を取得
+        // 🔑 管理者の場合（先にチェック）
+        if (profile.role === 'admin') {
+            alert('管理者としてログインしました');
+            console.log('✅ 管理者ログイン成功:', authData.user.email);
+            location.reload(); // ページをリロードして認証状態を反映
+            return;
+        }
+        
+        // 👥 企業ユーザーの場合（company_id が必要）
         if (profile.company_id) {
             const { data: company } = await window.supabaseClient
                 .from('companies')
