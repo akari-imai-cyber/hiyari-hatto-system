@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理者ダッシュボード - ヒヤリハット報告システム</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Supabase JS ライブラリ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Supabase クライアント -->
+    <script src="js/config.js?v=20260228k"></script>
+    
+    <!-- Supabase Auth 認証システム -->
+    <script src="js/auth-supabase.js?v=20260301a"></script>
+    
+    <!-- 認証チェック実行 -->
+    <script>
+    (async function() {
+        // Supabaseクライアント初期化を待つ
+        if (typeof initializeApp === 'function') {
+            initializeApp();
+        }
+        
+        const authenticated = await checkAuthentication();
+        if (!authenticated) {
+            // アクセス拒否の場合は処理が中断される
+        }
+    })();
+    </script>
+    
+    <!-- ユーザー情報表示 -->
+    <script>
+    window.addEventListener('authComplete', function(e) {
+        const auth = e.detail;
+        console.log('🔍 dashboard.html - 認証情報:', auth);
+        console.log('🔍 dashboard.html - ロール:', auth.role);
+        
+        const userInfo = document.getElementById('user-info');
+        const displayCompany = document.getElementById('display-company');
+        const displayEmail = document.getElementById('display-email');
+        const adminReportsLink = document.getElementById('admin-reports-link');
+        const adminUsersLink = document.getElementById('admin-users-link');
+        
+        if (auth && auth.authenticated) {
+            displayCompany.textContent = auth.companyName || auth.companyCode || '企業名不明';
+            displayEmail.textContent = auth.email || 'メール不明';
+            userInfo.style.display = 'flex';
+            
+            console.log('🔍 ロールチェック:', auth.role, 'company_admin?', auth.role === 'company_admin', 'admin?', auth.role === 'admin');
+            
+            // 企業管理者 または システム管理者の場合は「報告管理」「ユーザー管理」リンクを表示
+            if (auth.role === 'company_admin' || auth.role === 'admin') {
+                console.log('✅ 管理者リンク表示');
+                if (adminReportsLink) adminReportsLink.style.display = 'inline-block';
+                if (adminUsersLink) adminUsersLink.style.display = 'inline-block';
+            } else {
+                console.log('❌ 一般ユーザー - 管理者リンク非表示');
+            }
+        }
+    });
+    
+    async function handleLogout() {
+        if (confirm('ログアウトしますか？')) {
+            await window.supabaseClient.auth.signOut();
+            alert('ログアウトしました');
+            location.reload();
+        }
+    }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">🚛 ヒヤリハット報告システム</h1>
+                <div class="header-right">
+                    <div id="user-info" class="user-info" style="display: none;">
+                        <span class="user-company" id="display-company">読み込み中...</span>
+                        <span class="user-email" id="display-email">読み込み中...</span>
+                        <button class="btn-logout" onclick="handleLogout()" title="ログアウト">🚪</button>
+                    </div>
+                    <nav class="nav">
+                        <a href="index.html" class="nav-link">報告入力</a>
+                        <a href="dashboard.html" class="nav-link active">ダッシュボード</a>
+                        <a href="analytics.html" class="nav-link">分析</a>
+                        <a href="admin-reports.html" class="nav-link" id="admin-reports-link" style="display: none;">報告管理</a>
+                        <a href="admin-users.html" class="nav-link" id="admin-users-link" style="display: none;">ユーザー管理</a>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content dashboard-content">
+            <div class="dashboard-header">
+                <h1>管理者ダッシュボード</h1>
+                <div class="filter-controls">
+                    <select id="status-filter" class="form-control">
+                        <option value="">すべてのステータス</option>
+                        <option value="step1_complete">基本情報のみ</option>
+                        <option value="step2_complete">詳細入力済</option>
+                        <option value="confirmed">確認済</option>
+                        <option value="in_progress">対応中</option>
+                        <option value="completed">完了</option>
+                    </select>
+                    <select id="category-filter" class="form-control">
+                        <option value="">すべてのカテゴリ</option>
+                        <option value="driving">走行中</option>
+                        <option value="loading">荷役中</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="refreshReports()">🔄 更新</button>
+                    <button class="btn btn-success" onclick="exportToCSV()">📥 CSVエクスポート</button>
+                </div>
+            </div>
+
+            <!-- サマリーカード -->
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-icon">📊</div>
+                    <div class="summary-content">
+                        <h3>総報告数</h3>
+                        <p class="summary-number" id="total-reports">0</p>
+                    </div>
+                </div>
+                <div class="summary-card pending-card">
+                    <div class="summary-icon">⚠️</div>
+                    <div class="summary-content">
+                        <h3>未確認</h3>
+                        <p class="summary-number" id="pending-reports">0</p>
+                    </div>
+                </div>
+                <div class="summary-card warning-card">
+                    <div class="summary-icon">🔴</div>
+                    <div class="summary-content">
+                        <h3>重大度★★★以上</h3>
+                        <p class="summary-number" id="high-severity">0</p>
+                    </div>
+                </div>
+                <div class="summary-card success-card">
+                    <div class="summary-icon">✓</div>
+                    <div class="summary-content">
+                        <h3>今月の完了</h3>
+                        <p class="summary-number" id="completed-reports">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 報告リスト -->
+            <div class="card">
+                <h2 class="section-title">報告一覧</h2>
+                
+                <div id="reports-list">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 NLP ヒヤリハット報告システム</p>
+        </footer>
+    </div>
+
+    <!-- 詳細モーダル -->
+    <div id="detail-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">報告詳細</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- 詳細内容が動的に挿入されます -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">閉じる</button>
+                <button class="btn btn-success" onclick="updateStatus()">ステータス更新</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js?v=20260226"></script>
+    <script src="js/dashboard.js?v=20260228o"></script>
+</body>
+</html>
