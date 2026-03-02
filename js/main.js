@@ -63,9 +63,13 @@ function getCurrentLocation() {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             
+            // hidden inputに値を設定
+            document.getElementById('gps-lat').value = lat;
+            document.getElementById('gps-lng').value = lng;
+            
             // 位置情報を保存
-            reportData.location_gps_lat = lat;
-            reportData.location_gps_lng = lng;
+            reportData.location_lat = lat;
+            reportData.location_lng = lng;
             
             // 住所を逆ジオコーディング（簡易版）
             document.getElementById('location').value = `緯度: ${lat.toFixed(6)}, 経度: ${lng.toFixed(6)}`;
@@ -245,12 +249,12 @@ async function submitStep1() {
 }
 
 // STEP 2 へ進む
-function goToStep2() {
+async function goToStep2() {
     if (!validateStep1()) {
         return;
     }
     
-    collectFormData();
+    await collectFormData();
     
     // STEP2表示・STEP1非表示
     document.querySelector('#report-form > .card').classList.add('hidden');
@@ -306,7 +310,7 @@ function validateStep1() {
     
     return true;
 }// フォームデータ収集
-function collectFormData() {
+async function collectFormData() {
     // 選択されたカテゴリを配列として取得
     const selectedCategories = document.getElementById('what-category').value
         .split(',')
@@ -317,12 +321,35 @@ function collectFormData() {
     const reportType = window.currentReportType || 'hiyari';
     
     // 認証情報から company_id を取得
-    const auth = window.getCurrentAuth ? window.getCurrentAuth() : null;
-    const companyId = auth ? auth.companyId : null;
+    let auth = window.getCurrentAuth ? window.getCurrentAuth() : null;
+    let companyId = auth ? auth.companyId : null;
+    
+    // company_id が取得できない場合、セッションから再取得
+    if (!companyId) {
+        console.warn('⚠️ currentAuth から company_id 取得失敗、セッションから再取得');
+        try {
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            if (session) {
+                const { data: profile } = await window.supabaseClient
+                    .from('profiles')
+                    .select('company_id')
+                    .eq('id', session.user.id)
+                    .single();
+                
+                if (profile && profile.company_id) {
+                    companyId = profile.company_id;
+                    console.log('✅ セッションから company_id 取得成功:', companyId);
+                }
+            }
+        } catch (error) {
+            console.error('❌ セッション取得エラー:', error);
+        }
+    }
     
     if (!companyId) {
         console.error('❌ 企業IDが取得できません');
         alert('認証情報が取得できません。再度ログインしてください。');
+        window.location.href = 'index.html';
         return;
     }
     
