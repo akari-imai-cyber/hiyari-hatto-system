@@ -348,14 +348,47 @@ async function addUser(event) {
         return;
     }
     
+    if (password.length < 6) {
+        alert('パスワードは6文字以上で設定してください');
+        return;
+    }
+    
     try {
         console.log(`➕ 新規ユーザーを作成中: ${email}`);
         
-        // Step 1: UUIDを生成（クライアント側で生成）
-        const userId = crypto.randomUUID();
-        console.log('🆔 生成したユーザーID:', userId);
+        // Step 1: Supabase Auth にユーザーを作成（autoConfirm オプション付き）
+        const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                emailRedirectTo: 'https://hiyari-hatto-system.vercel.app/index.html',
+                data: {
+                    full_name: fullName
+                }
+            }
+        });
         
-        // Step 2: profilesテーブルに直接レコードを作成
+        if (authError) {
+            console.error('❌ Auth ユーザー作成エラー:', authError);
+            alert('ユーザーの作成に失敗しました: ' + authError.message);
+            return;
+        }
+        
+        // メール確認が必要な場合でも user は返ってくる
+        if (!authData.user) {
+            console.error('❌ ユーザーIDが取得できませんでした');
+            alert('ユーザーの作成に失敗しました');
+            return;
+        }
+        
+        const userId = authData.user.id;
+        console.log('✅ Auth ユーザー作成成功:', userId);
+        console.log('📧 メール確認状態:', authData.user.email_confirmed_at ? '確認済み' : '未確認');
+        
+        // Step 2: profiles テーブルにプロフィールを作成
+        // 少し待機してから実行（Auth ユーザーが完全に作成されるまで）
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         const { error: profileError } = await supabaseClient
             .from('profiles')
             .insert({
@@ -363,7 +396,6 @@ async function addUser(event) {
                 email: email,
                 role: role,
                 company_id: currentCompanyId,
-                // full_name カラムは存在しないためスキップ
                 created_at: new Date().toISOString()
             });
         
@@ -375,16 +407,12 @@ async function addUser(event) {
         
         console.log('✅ Profile作成成功');
         
-        // Step 3: Supabase Authに手動でユーザーを登録（バックグラウンド）
-        // 注意: この方法ではauth.usersに直接登録できないため、
-        // ユーザーには初回ログイン時にパスワードを設定してもらう
-        
-        console.log('📧 ユーザーに以下の情報を伝えてください:');
-        console.log('  - メール:', email);
-        console.log('  - 初回ログイン用URL: https://stellular-profiterole-2ff0a2.netlify.app/index.html');
-        console.log('  - 企業コード:', (await supabaseClient.from('companies').select('company_code').eq('id', currentCompanyId).single()).data?.company_code);
-        
-        alert(`ユーザー ${email} をプロフィールに追加しました。\n\nユーザーには以下を伝えてください：\n1. ログインURL: https://stellular-profiterole-2ff0a2.netlify.app/index.html\n2. 初回ログイン時に「パスワードを忘れた場合」からパスワードを設定\n\n※ または管理者が直接 Supabase Authentication でユーザーを作成してください`);
+        // メール確認が必要な場合は通知
+        if (!authData.user.email_confirmed_at) {
+            alert(`ユーザー ${email} を追加しました。\n\n⚠️ メール確認が必要です。\nユーザーには確認メールが送信されています。\nメール内のリンクをクリックしてアカウントを有効化してください。`);
+        } else {
+            alert(`ユーザー ${email} を追加しました。\nすぐにログイン可能です。`);
+        }
         
         closeAddUserModal();
         await loadUsers();
