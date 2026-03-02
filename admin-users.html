@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ユーザー管理 - ヒヤリハット報告システム</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/admin-users.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Supabase JS ライブラリ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Supabase 設定 -->
+    <script src="js/config.js?v=20260301a"></script>
+    
+    <!-- 認証チェック（管理者と企業管理者） -->
+    <script>
+    window.addEventListener('load', async function() {
+        if (typeof initializeApp === 'function') {
+            initializeApp();
+        }
+        
+        // セッションチェック
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        
+        if (!session) {
+            const email = prompt('管理者メールアドレスを入力してください\n\n例: akari-imai@tehara.co.jp または nlp-test@company.local');
+            if (!email) {
+                alert('認証が必要です');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            const password = prompt('パスワードを入力してください');
+            if (!password) {
+                alert('認証が必要です');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+            
+            if (authError) {
+                alert('認証に失敗しました: ' + authError.message);
+                window.location.href = 'index.html';
+                return;
+            }
+        }
+        
+        // ロールチェック（admin または company_admin）
+        const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('role, company_id')
+            .eq('id', session.user.id)
+            .single();
+        
+        if (!profile || (profile.role !== 'admin' && profile.role !== 'company_admin')) {
+            alert('管理者権限が必要です');
+            window.location.href = 'index.html';
+            return;
+        }
+        
+        // グローバル変数に保存
+        window.currentUserRole = profile.role;
+        window.currentUserCompanyId = profile.company_id;
+        
+        console.log('✅ 認証成功:', profile.role);
+        
+        // 企業管理者の場合は企業選択を非表示にして自動選択
+        if (profile.role === 'company_admin') {
+            console.log('👨‍💼 企業管理者モード: 企業ID', profile.company_id);
+        }
+    });
+    </script>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- ヘッダー -->
+        <nav class="main-nav">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <span class="logo-icon">🚛</span>
+                    ヒヤリハット報告システム - ユーザー管理
+                </div>
+                <div class="nav-links">
+                    <a href="admin.html" class="nav-link">企業管理</a>
+                    <a href="admin-reports.html" class="nav-link">報告管理</a>
+                    <a href="admin-users.html" class="nav-link active">ユーザー管理</a>
+                    <a href="#" class="nav-link" onclick="adminLogout(); return false;">ログアウト</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- メインコンテンツ -->
+        <div class="content-wrapper">
+            <div class="admin-header">
+                <h1>👥 ユーザー管理</h1>
+                <p>企業ごとのユーザーを管理し、管理者権限を付与できます</p>
+            </div>
+
+            <!-- 企業選択 -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>企業を選択</h2>
+                </div>
+                <div class="card-body">
+                    <div class="filter-group">
+                        <label for="company-select">企業:</label>
+                        <select id="company-select" class="form-control" onchange="loadUsers()">
+                            <option value="">企業を選択してください...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ユーザー一覧 -->
+            <div class="card" id="users-card" style="display: none;">
+                <div class="card-header">
+                    <h2 id="company-name-display">ユーザー一覧</h2>
+                    <button class="btn btn-primary" onclick="showAddUserModal()">
+                        ➕ 新しいユーザーを追加
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="loading" class="loading">
+                        <div class="spinner"></div>
+                        <p>読み込み中...</p>
+                    </div>
+                    
+                    <div id="users-table" style="display: none;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>メールアドレス</th>
+                                    <th>氏名</th>
+                                    <th>ロール</th>
+                                    <th>作成日</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-tbody">
+                                <!-- ユーザー一覧がここに表示される -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="no-users" class="empty-state" style="display: none;">
+                        <p>👤 ユーザーが登録されていません</p>
+                        <button class="btn btn-primary" onclick="showAddUserModal()">
+                            ➕ 最初のユーザーを追加
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新規ユーザー追加モーダル -->
+    <div id="add-user-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>新しいユーザーを追加</h2>
+                <button class="modal-close" onclick="closeAddUserModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="add-user-form" onsubmit="addUser(event)">
+                    <div class="form-group">
+                        <label>メールアドレス *</label>
+                        <input type="email" id="new-email" class="form-control" required 
+                               placeholder="example@company.local">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>パスワード *</label>
+                        <input type="password" id="new-password" class="form-control" required 
+                               minlength="8" placeholder="8文字以上">
+                        <small>※ 8文字以上で設定してください</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>氏名</label>
+                        <input type="text" id="new-fullname" class="form-control" 
+                               placeholder="山田太郎">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>ロール *</label>
+                        <select id="new-role" class="form-control" required>
+                            <option value="company_user">一般ユーザー</option>
+                            <option value="company_admin">企業管理者</option>
+                        </select>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeAddUserModal()">
+                            キャンセル
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            ➕ 追加
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 編集モーダル -->
+    <div id="edit-user-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>ユーザー情報を編集</h2>
+                <button class="modal-close" onclick="closeEditUserModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-user-form" onsubmit="saveUser(event)">
+                    <input type="hidden" id="edit-user-id">
+                    
+                    <div class="form-group">
+                        <label>メールアドレス</label>
+                        <input type="email" id="edit-email" class="form-control" readonly>
+                        <small>※ メールアドレスは変更できません</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>氏名</label>
+                        <input type="text" id="edit-fullname" class="form-control" 
+                               placeholder="山田太郎">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>ロール *</label>
+                        <select id="edit-role" class="form-control" required>
+                            <option value="company_user">一般ユーザー</option>
+                            <option value="company_admin">企業管理者</option>
+                        </select>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeEditUserModal()">
+                            キャンセル
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            💾 保存
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/admin.js"></script>
+    <script src="js/admin-users.js?v=20260301a"></script>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログインテスト</title>
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #2196F3;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log-item {
+            margin-bottom: 8px;
+            padding: 5px;
+        }
+        .log-success {
+            color: #4CAF50;
+        }
+        .log-error {
+            color: #f44336;
+        }
+        .log-info {
+            color: #2196F3;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js?v=20260228k"></script>
+</head>
+<body>
+    <div class="card">
+        <h1>🔐 ログインテスト</h1>
+        
+        <div class="form-group">
+            <label>企業コード または メールアドレス</label>
+            <input type="text" id="email" value="nlp-test" placeholder="例: nlp-test または nlp-test@company.local">
+        </div>
+        
+        <div class="form-group">
+            <label>パスワード</label>
+            <input type="password" id="password" value="nlptest123" placeholder="パスワードを入力">
+        </div>
+        
+        <button onclick="testLogin()">ログインテスト</button>
+        
+        <div class="log" id="log">
+            <div class="log-item log-info">ログ出力エリア</div>
+        </div>
+    </div>
+
+    <script>
+        const logArea = document.getElementById('log');
+        
+        function addLog(message, type = 'info') {
+            const logItem = document.createElement('div');
+            logItem.className = `log-item log-${type}`;
+            logItem.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logArea.appendChild(logItem);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+        
+        async function testLogin() {
+            logArea.innerHTML = '';
+            addLog('🔐 ログインテスト開始', 'info');
+            
+            const emailInput = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (!emailInput) {
+                addLog('❌ 企業コードが入力されていません', 'error');
+                return;
+            }
+            
+            if (!password) {
+                addLog('❌ パスワードが入力されていません', 'error');
+                return;
+            }
+            
+            addLog(`📧 入力された企業コード: ${emailInput}`, 'info');
+            
+            // 企業コードの場合は @company.local を追加
+            let email = emailInput;
+            if (!emailInput.includes('@')) {
+                email = emailInput + '@company.local';
+                addLog(`📧 メールアドレスに変換: ${email}`, 'info');
+            }
+            
+            // Supabaseクライアント確認
+            if (!window.supabaseClient) {
+                addLog('⚙️ Supabaseクライアントを初期化中...', 'info');
+                if (typeof initializeApp === 'function') {
+                    initializeApp();
+                }
+            }
+            
+            if (!window.supabaseClient) {
+                addLog('❌ Supabaseクライアントの初期化に失敗', 'error');
+                return;
+            }
+            
+            addLog('✅ Supabaseクライアント初期化完了', 'success');
+            
+            try {
+                // ログイン試行
+                addLog('🔐 Supabase Auth でログイン試行中...', 'info');
+                
+                const { data: authData, error: authError } = await window.supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (authError) {
+                    addLog(`❌ 認証エラー: ${authError.message}`, 'error');
+                    addLog(`エラーコード: ${authError.status}`, 'error');
+                    return;
+                }
+                
+                addLog('✅ 認証成功！', 'success');
+                addLog(`ユーザーID: ${authData.user.id}`, 'success');
+                addLog(`メール: ${authData.user.email}`, 'success');
+                
+                // プロフィール取得
+                addLog('📋 プロフィール情報を取得中...', 'info');
+                
+                const { data: profile, error: profileError } = await window.supabaseClient
+                    .from('profiles')
+                    .select('role, company_id, email')
+                    .eq('id', authData.user.id)
+                    .single();
+                
+                if (profileError) {
+                    addLog(`❌ プロフィール取得エラー: ${profileError.message}`, 'error');
+                    return;
+                }
+                
+                if (!profile) {
+                    addLog('❌ プロフィールが見つかりません', 'error');
+                    return;
+                }
+                
+                addLog('✅ プロフィール取得成功', 'success');
+                addLog(`ロール: ${profile.role}`, 'success');
+                addLog(`企業ID: ${profile.company_id}`, 'success');
+                
+                // 企業情報取得
+                if (profile.company_id) {
+                    addLog('🏢 企業情報を取得中...', 'info');
+                    
+                    const { data: company, error: companyError } = await window.supabaseClient
+                        .from('companies')
+                        .select('company_code, company_name')
+                        .eq('id', profile.company_id)
+                        .single();
+                    
+                    if (companyError) {
+                        addLog(`❌ 企業情報取得エラー: ${companyError.message}`, 'error');
+                        return;
+                    }
+                    
+                    if (!company) {
+                        addLog('❌ 企業情報が見つかりません', 'error');
+                        return;
+                    }
+                    
+                    addLog('✅ 企業情報取得成功', 'success');
+                    addLog(`企業コード: ${company.company_code}`, 'success');
+                    addLog(`企業名: ${company.company_name}`, 'success');
+                }
+                
+                addLog('', 'info');
+                addLog('🎉 すべてのテストが成功しました！', 'success');
+                addLog(`✅ ロール: ${profile.role}`, 'success');
+                
+                if (profile.role === 'company_admin' || profile.role === 'admin') {
+                    addLog('✅ 企業管理者として「報告管理」へのアクセスが可能です', 'success');
+                } else {
+                    addLog('ℹ️ 一般ユーザーです。「報告管理」へのアクセスはできません。', 'info');
+                }
+                
+            } catch (error) {
+                addLog(`❌ 予期しないエラー: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>

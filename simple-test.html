@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>簡単テスト - カテゴリ選択</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Noto Sans JP', sans-serif; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 40px; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { 
+            margin-bottom: 10px; 
+            color: #333; 
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .status-box {
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .status-waiting {
+            background: #fef3c7;
+            color: #92400e;
+            border: 2px solid #fbbf24;
+        }
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #10b981;
+        }
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #ef4444;
+        }
+        .btn-group { 
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 30px 0; 
+        }
+        .big-btn { 
+            padding: 30px;
+            font-size: 20px;
+            font-weight: bold;
+            border: 3px solid #2563eb;
+            background: white;
+            color: #2563eb;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .big-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.2);
+            background: #eff6ff;
+        }
+        .big-btn.active { 
+            background: #2563eb;
+            color: white;
+        }
+        #category-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 10px;
+        }
+        .category-grid { 
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .cat-btn { 
+            padding: 20px;
+            border: 2px solid #d1d5db;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.2s;
+            text-align: center;
+            font-weight: 500;
+        }
+        .cat-btn:hover { 
+            border-color: #2563eb;
+            background: #eff6ff;
+            transform: scale(1.05);
+        }
+        .cat-btn.selected { 
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+        .result-box { 
+            margin-top: 30px;
+            padding: 25px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+        }
+        .result-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #374151;
+        }
+        .result-content {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #6b7280;
+        }
+        .selected-item {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #2563eb;
+            color: white;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .info-box {
+            background: #dbeafe;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 カテゴリ選択テスト</h1>
+        <p class="subtitle">コンソールを開かなくても動作確認できます</p>
+
+        <div id="status" class="status-box status-waiting">
+            ⏳ 下のボタンを押してください
+        </div>
+
+        <div class="info-box">
+            <strong>📝 使い方:</strong><br>
+            1. 「走行中」または「荷役中」ボタンをクリック<br>
+            2. カテゴリボタンが表示されます<br>
+            3. 複数選択できます（もう一度クリックで解除）
+        </div>
+
+        <div class="btn-group">
+            <button class="big-btn" onclick="testCategory('driving')">
+                🚛<br>走行中
+            </button>
+            <button class="big-btn" onclick="testCategory('loading')">
+                📦<br>荷役・作業中
+            </button>
+        </div>
+
+        <div id="category-section" style="display: none;">
+            <h3 style="margin-bottom: 15px; color: #374151;">何が起きましたか？（複数選択可）</h3>
+            <div id="category-buttons" class="category-grid"></div>
+        </div>
+
+        <div class="result-box">
+            <div class="result-title">📊 選択結果</div>
+            <div id="result" class="result-content">まだ何も選択されていません</div>
+        </div>
+    </div>
+
+    <script>
+        // カテゴリ定義
+        const CATEGORIES = {
+            driving: [
+                '急ブレーキ・急ハンドル',
+                '車両との接触寸前',
+                '歩行者・自転車との接触寸前',
+                '見落とし・確認ミス',
+                'バック・方向転換時のニアミス',
+                '車線変更・合流ヒヤリ',
+                '踏切・交差点ヒヤリ',
+                'その他'
+            ],
+            loading: [
+                '荷崩れ・落下寸前',
+                '転倒・つまずき・滑り',
+                '挟まれ・巻き込まれ寸前',
+                '機材との接触',
+                '荷物の破損寸前',
+                'その他'
+            ]
+        };
+
+        function updateStatus(message, type) {
+            const status = document.getElementById('status');
+            status.className = 'status-box status-' + type;
+            status.innerHTML = message;
+        }
+
+        function testCategory(type) {
+            const section = document.getElementById('category-section');
+            const container = document.getElementById('category-buttons');
+            
+            // ステータス更新
+            const typeName = type === 'driving' ? '走行中' : '荷役中';
+            updateStatus('✅ ' + typeName + ' のカテゴリを表示しています', 'success');
+            
+            // ボタンのアクティブ状態更新
+            document.querySelectorAll('.big-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // カテゴリボタン作成
+            container.innerHTML = '';
+            const cats = CATEGORIES[type];
+            
+            cats.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = 'cat-btn';
+                btn.textContent = cat;
+                btn.onclick = function() {
+                    this.classList.toggle('selected');
+                    updateResult();
+                };
+                container.appendChild(btn);
+            });
+            
+            section.style.display = 'block';
+            updateResult();
+        }
+
+        function updateResult() {
+            const selected = Array.from(document.querySelectorAll('.cat-btn.selected'))
+                .map(btn => btn.textContent);
+            
+            const resultDiv = document.getElementById('result');
+            
+            if (selected.length > 0) {
+                resultDiv.innerHTML = selected.map(s => 
+                    '<span class="selected-item">✓ ' + s + '</span>'
+                ).join('');
+            } else {
+                resultDiv.textContent = 'カテゴリを選択してください';
+            }
+        }
+
+        // ページ読み込み時
+        window.addEventListener('load', function() {
+            updateStatus('✅ ページ読み込み完了。下のボタンを押してください', 'success');
+            setTimeout(function() {
+                updateStatus('⏳ 「走行中」または「荷役中」を選択してください', 'waiting');
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

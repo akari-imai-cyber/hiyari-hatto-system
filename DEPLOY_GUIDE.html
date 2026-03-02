@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netlify デプロイ手順</title>
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #00ad9f;
+            border-bottom: 3px solid #00ad9f;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #333;
+            margin-top: 30px;
+        }
+        .step {
+            background: #f9f9f9;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #00ad9f;
+            border-radius: 5px;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #00ad9f;
+        }
+        code {
+            background: #eee;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .file-list {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .download-btn {
+            display: inline-block;
+            background: #00ad9f;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .download-btn:hover {
+            background: #008f82;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Netlify デプロイ手順</h1>
+        
+        <div class="warning">
+            <strong>⚠️ 重要：</strong>このページに記載されている手順に従って、必要なファイルをダウンロードして Netlify にアップロードしてください。
+        </div>
+
+        <h2>📦 必要なファイル構成</h2>
+        
+        <div class="file-list">
+プロジェクトフォルダ/
+├─ index.html           (31.9 KB)
+├─ dashboard.html       (5.2 KB)
+├─ analytics.html       (6.3 KB)
+├─ css/
+│  ├─ style.css        (11.5 KB)
+│  ├─ dashboard.css    (6.0 KB)
+│  └─ analytics.css    (2.4 KB)
+└─ js/
+   ├─ config.js        (2.2 KB)
+   ├─ main.js          (18.2 KB)
+   ├─ dashboard.js     (18.9 KB)
+   ├─ analytics.js     (15.0 KB)
+   └─ auth.js          (1.9 KB) ← ★ この認証ファイルが重要！
+        </div>
+
+        <h2>📥 ステップ1：ファイルをダウンロード</h2>
+        
+        <div class="step">
+            <h3>方法A：個別にダウンロード（推奨）</h3>
+            <ol>
+                <li>AI チャット画面の左側「ファイルエクスプローラー」を開く</li>
+                <li>以下のファイルを<strong>右クリック → ダウンロード</strong>：
+                    <ul>
+                        <li><code>index.html</code></li>
+                        <li><code>dashboard.html</code></li>
+                        <li><code>analytics.html</code></li>
+                    </ul>
+                </li>
+                <li><strong>css/</strong> フォルダを右クリック → ダウンロード</li>
+                <li><strong>js/</strong> フォルダを右クリック → ダウンロード</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>方法B：一括ダウンロード</h3>
+            <ol>
+                <li>ファイルエクスプローラーの上部にある「ダウンロード」アイコンをクリック</li>
+                <li>すべてのファイルが ZIP 形式でダウンロードされます</li>
+                <li>ダウンロードした ZIP を解凍</li>
+            </ol>
+        </div>
+
+        <h2>📤 ステップ2：Netlify にアップロード</h2>
+        
+        <div class="step">
+            <h3>アップロード手順</h3>
+            <ol>
+                <li><a href="https://app.netlify.com" target="_blank">Netlify にログイン</a></li>
+                <li>サイト <code>stellular-profiterole-2ff0a2</code> を開く</li>
+                <li><strong>Deploys</strong> タブをクリック</li>
+                <li>右上の <strong>「Trigger deploy」→「Clear cache and deploy site」</strong> をクリック</li>
+                <li>画面に表示される <strong>「Drag and drop your site output folder here」</strong> エリアに、
+                    以下のいずれかをドラッグ：
+                    <ul>
+                        <li><strong>フォルダ全体</strong>（index.html、css/、js/ を含むフォルダ）</li>
+                        <li><strong>ZIP ファイル</strong>（解凍せずにそのまま）</li>
+                    </ul>
+                </li>
+                <li>アップロード完了を待つ（1〜2分）</li>
+            </ol>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ 注意：</strong>必ず <code>js/auth.js</code> ファイルが含まれていることを確認してください。このファイルがないと認証機能が動作しません。
+        </div>
+
+        <h2>✅ ステップ3：動作確認</h2>
+        
+        <div class="step">
+            <h3>テスト手順</h3>
+            <ol>
+                <li>デプロイ完了後、<strong>シークレットモード（Ctrl+Shift+N）</strong>でブラウザを開く</li>
+                <li><a href="https://stellular-profiterole-2ff0a2.netlify.app/index.html" target="_blank">
+                    https://stellular-profiterole-2ff0a2.netlify.app/index.html</a> を開く</li>
+                <li>以下のダイアログが表示されることを確認：
+                    <ul>
+                        <li><strong>ユーザーID</strong>：<code>nlp-test</code></li>
+                        <li><strong>パスワード</strong>：<code>nlp2026</code></li>
+                    </ul>
+                </li>
+                <li>正しく入力すると「ログインしました」と表示される</li>
+                <li>「キャンセル」または空白で OK を押すと「アクセスが拒否されました」と表示される</li>
+            </ol>
+        </div>
+
+        <h2>🔧 トラブルシューティング</h2>
+        
+        <div class="step">
+            <h3>認証ダイアログが表示されない場合</h3>
+            <ol>
+                <li><strong>F12</strong> を押して開発者ツールを開く</li>
+                <li><strong>Console</strong> タブを確認</li>
+                <li>赤いエラーが表示されている場合：
+                    <ul>
+                        <li><code>auth.js:1 Failed to load resource</code> → <strong>auth.js がアップロードされていません</strong></li>
+                        <li><strong>解決方法</strong>：js/ フォルダ内に auth.js が含まれていることを確認して再アップロード</li>
+                    </ul>
+                </li>
+                <li><strong>Network</strong> タブで <code>auth.js</code> が 200 (成功) になっているか確認</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>それでも動作しない場合</h3>
+            <ol>
+                <li>Netlify で <strong>「Clear cache and deploy site」</strong> を実行</li>
+                <li>ブラウザのキャッシュをクリア（Ctrl+Shift+Delete）</li>
+                <li>シークレットモードで再度テスト</li>
+                <li>直接 <a href="https://stellular-profiterole-2ff0a2.netlify.app/js/auth.js" target="_blank">
+                    https://stellular-profiterole-2ff0a2.netlify.app/js/auth.js</a> を開いて、
+                    コードが表示されるか確認</li>
+            </ol>
+        </div>
+
+        <h2>📞 サポート</h2>
+        
+        <p>この手順でうまくいかない場合は、以下の情報をスクリーンショットで共有してください：</p>
+        <ul>
+            <li>Netlify の Deploys 画面（最新デプロイの時刻とファイル一覧）</li>
+            <li>ブラウザの開発者ツール（F12）の Console タブ</li>
+            <li>ブラウザの開発者ツール（F12）の Network タブで <code>auth.js</code> の読み込み状況</li>
+        </ul>
+
+        <hr style="margin: 40px 0;">
+        
+        <p style="text-align: center; color: #666;">
+            <strong>物流会社向けヒヤリハット報告システム</strong><br>
+            Version 1.0 | 2026年2月
+        </p>
+    </div>
+</body>
+</html>

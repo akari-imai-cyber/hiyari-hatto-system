@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>報告管理画面 - ヒヤリハット報告システム</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/admin-reports.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Supabase JS ライブラリ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Supabase クライアント -->
+    <script src="js/config.js?v=20260301a"></script>
+    
+    <!-- Supabase Auth 管理者認証 -->
+    <script>
+        // ページが読み込まれる前に認証チェック
+        (async function() {
+            const { createClient } = supabase;
+            const supabaseUrl = 'https://yimeoggmsubtcmxddyat.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpbWVvZ2dtc3VidGNteGRkeWF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5OTcwMTcsImV4cCI6MjA4NzU3MzAxN30.wQY_t9umGhqshO1UQJ-aHj3MPUimzJgOso3W9YmKYlA';
+            const supabaseClient = createClient(supabaseUrl, supabaseKey);
+            window.supabaseClient = supabaseClient;
+            
+            // 既存のセッションを確認
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            
+            if (session) {
+                const { data: profile } = await supabaseClient
+                    .from('profiles')
+                    .select('role, company_id')
+                    .eq('id', session.user.id)
+                    .single();
+                
+                // admin または company_admin なら OK
+                if (profile && (profile.role === 'admin' || profile.role === 'company_admin')) {
+                    console.log('✅ 管理者認証済み:', session.user.email, '権限:', profile.role);
+                    displayAdminInfo(session.user.email);
+                    // company_id をグローバルに保存（後で使用）
+                    window.currentUserCompanyId = profile.company_id;
+                    window.currentUserRole = profile.role;
+                    return;
+                }
+            }
+            
+            // 認証が必要
+            const email = prompt('管理者メールアドレスを入力してください\n例: akari-imai@tehara.co.jp');
+            if (!email) {
+                alert('認証が必要です');
+                location.href = 'admin.html';
+                return;
+            }
+            
+            const password = prompt('パスワードを入力してください');
+            if (!password) {
+                alert('認証が必要です');
+                location.href = 'admin.html';
+                return;
+            }
+            
+            const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+                email: email.trim(),
+                password: password
+            });
+            
+            if (authError) {
+                alert('認証に失敗しました。\n' + authError.message);
+                location.href = 'admin.html';
+                return;
+            }
+            
+            // 管理者権限を確認
+            const { data: profile } = await supabaseClient
+                .from('profiles')
+                .select('role, company_id')
+                .eq('id', authData.user.id)
+                .single();
+            
+            // admin または company_admin なら OK
+            if (!profile || (profile.role !== 'admin' && profile.role !== 'company_admin')) {
+                alert('管理者権限がありません');
+                await supabaseClient.auth.signOut();
+                location.href = 'admin.html';
+                return;
+            }
+            
+            // company_id をグローバルに保存
+            window.currentUserCompanyId = profile.company_id;
+            window.currentUserRole = profile.role;
+            displayAdminInfo(authData.user.email);
+        })();
+        
+        function displayAdminInfo(email) {
+            const adminUserInfo = document.getElementById('admin-user-info');
+            const adminEmailDisplay = document.getElementById('admin-display-email');
+            if (adminEmailDisplay) {
+                adminEmailDisplay.textContent = email || 'メール不明';
+            }
+            if (adminUserInfo) {
+                adminUserInfo.style.display = 'flex';
+            }
+        }
+        
+        async function adminLogout() {
+            if (confirm('ログアウトしますか？')) {
+                await window.supabaseClient.auth.signOut();
+                alert('ログアウトしました。');
+                location.href = 'admin.html';
+            }
+        }
+    </script>
+</head>
+<body>
+    <!-- ナビゲーション -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-icon">🚛</span>
+                <span class="logo-text">ヒヤリハット報告システム</span>
+            </div>
+            <div class="nav-right">
+                <div id="admin-user-info" class="admin-user-info" style="display: none;">
+                    <span class="admin-label">👤 管理者:</span>
+                    <span class="admin-email" id="admin-display-email">読み込み中...</span>
+                    <button class="btn-admin-logout" onclick="adminLogout()" title="ログアウト">🚪</button>
+                </div>
+                <div class="nav-links">
+                    <a href="index.html">報告入力</a>
+                    <a href="dashboard.html">ダッシュボード</a>
+                    <a href="analytics.html">分析</a>
+                    <a href="admin.html">企業管理</a>
+                    <a href="admin-reports.html" class="active">報告管理</a>
+                    <a href="admin-users.html">ユーザー管理</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- メインコンテンツ -->
+    <div class="admin-container">
+        <!-- ヘッダー -->
+        <div class="admin-header">
+            <h1>📝 報告管理画面</h1>
+            <p>全企業の報告を閲覧・編集できます（管理者専用）</p>
+        </div>
+
+        <!-- フィルター -->
+        <div class="card">
+            <div class="filter-controls">
+                <select id="company-filter" class="form-control">
+                    <option value="">すべての企業</option>
+                </select>
+                <select id="status-filter" class="form-control">
+                    <option value="">すべてのステータス</option>
+                    <option value="step1_complete">基本情報のみ</option>
+                    <option value="step2_complete">詳細入力済</option>
+                    <option value="confirmed">確認済</option>
+                </select>
+                <button class="btn btn-primary" onclick="loadReports()">🔄 更新</button>
+            </div>
+        </div>
+
+        <!-- 統計カード -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-label">総報告数</div>
+                <div class="stat-value" id="total-reports">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⚠️</div>
+                <div class="stat-label">未確認</div>
+                <div class="stat-value" id="pending-reports">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔴</div>
+                <div class="stat-label">修正依頼</div>
+                <div class="stat-value" id="edit-requests">0</div>
+            </div>
+        </div>
+
+        <!-- 報告一覧 -->
+        <div class="card">
+            <h2 class="section-title">報告一覧</h2>
+            <div id="reports-list">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 編集モーダル -->
+    <div id="edit-report-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>📝 報告を編集</h2>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="edit-modal-body">
+                <!-- 編集フォームが動的に挿入されます -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditModal()">キャンセル</button>
+                <button class="btn btn-primary" onclick="saveReport()">💾 保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/admin-reports.js?v=20260301a"></script>
+</body>
+</html>

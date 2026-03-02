@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分析・レポート - ヒヤリハット報告システム</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/analytics.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Supabase JS ライブラリ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Supabase クライアント -->
+    <script src="js/config.js?v=20260228k"></script>
+    
+    <!-- Supabase Auth 認証システム -->
+    <script src="js/auth-supabase.js?v=20260301a"></script>
+    
+    <!-- 認証チェック実行 -->
+    <script>
+    (async function() {
+        // Supabaseクライアント初期化を待つ
+        if (typeof initializeApp === 'function') {
+            initializeApp();
+        }
+        
+        const authenticated = await checkAuthentication();
+        if (!authenticated) {
+            // アクセス拒否の場合は処理が中断される
+        }
+    })();
+    </script>
+    
+    <!-- ユーザー情報表示 -->
+    <script>
+    window.addEventListener('authComplete', function(e) {
+        const auth = e.detail;
+        const userInfo = document.getElementById('user-info');
+        const displayCompany = document.getElementById('display-company');
+        const displayEmail = document.getElementById('display-email');
+        const adminReportsLink = document.getElementById('admin-reports-link');
+        
+        if (auth && auth.authenticated) {
+            displayCompany.textContent = auth.companyName || auth.companyCode || '企業名不明';
+            displayEmail.textContent = auth.email || 'メール不明';
+            userInfo.style.display = 'flex';
+            
+            // 企業管理者 または システム管理者の場合は「報告管理」リンクを表示
+            if (auth.role === 'company_admin' || auth.role === 'admin') {
+                adminReportsLink.style.display = 'inline-block';
+            }
+        }
+    });
+    
+    async function handleLogout() {
+        if (confirm('ログアウトしますか？')) {
+            await window.supabaseClient.auth.signOut();
+            alert('ログアウトしました');
+            location.reload();
+        }
+    }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">🚛 ヒヤリハット報告システム</h1>
+                <div class="header-right">
+                    <div id="user-info" class="user-info" style="display: none;">
+                        <span class="user-company" id="display-company">読み込み中...</span>
+                        <span class="user-email" id="display-email">読み込み中...</span>
+                        <button class="btn-logout" onclick="handleLogout()" title="ログアウト">🚪</button>
+                    </div>
+                    <nav class="nav">
+                        <a href="index.html" class="nav-link">報告入力</a>
+                        <a href="dashboard.html" class="nav-link">ダッシュボード</a>
+                        <a href="analytics.html" class="nav-link active">分析</a>
+                        <a href="admin-reports.html" class="nav-link" id="admin-reports-link" style="display: none;">報告管理</a>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content analytics-content">
+            <div class="analytics-header">
+                <h1>分析・レポート</h1>
+                <div class="period-selector">
+                    <select id="period-select" class="form-control">
+                        <option value="30">過去30日間</option>
+                        <option value="90">過去90日間</option>
+                        <option value="180">過去180日間</option>
+                        <option value="365">過去1年間</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="updateCharts()">更新</button>
+                </div>
+            </div>
+
+            <!-- 月次傾向グラフ -->
+            <div class="card">
+                <h2 class="section-title">月次傾向</h2>
+                <div class="chart-container" style="height: 400px; position: relative;">
+                    <canvas id="monthly-trend-chart" style="display: block; width: 100%; height: 100%;"></canvas>
+                </div>
+            </div>
+
+            <!-- カテゴリ別分布 -->
+            <div class="analytics-grid">
+                <div class="card">
+                    <h2 class="section-title">事象カテゴリ別</h2>
+                    <div class="chart-container" style="height: 300px; position: relative;">
+                        <canvas id="category-chart" style="display: block; width: 100%; height: 100%;"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="section-title">重大度分布</h2>
+                    <div class="chart-container" style="height: 300px; position: relative;">
+                        <canvas id="severity-chart" style="display: block; width: 100%; height: 100%;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ドライバー別分析 -->
+            <div class="card">
+                <h2 class="section-title">ドライバー別報告数</h2>
+                <div class="chart-container" style="height: 400px; position: relative;">
+                    <canvas id="driver-chart" style="display: block; width: 100%; height: 100%;"></canvas>
+                </div>
+            </div>
+
+            <!-- 原因分析 -->
+            <div class="card">
+                <h2 class="section-title">主な原因（複数選択可のため合計は100%を超える場合があります）</h2>
+                <div class="chart-container" style="height: 400px; position: relative;">
+                    <canvas id="cause-chart" style="display: block; width: 100%; height: 100%;"></canvas>
+                </div>
+            </div>
+
+            <!-- 時間帯別分析 -->
+            <div class="card">
+                <h2 class="section-title">時間帯別発生件数</h2>
+                <div class="chart-container" style="height: 300px; position: relative;">
+                    <canvas id="time-chart" style="display: block; width: 100%; height: 100%;"></canvas>
+                </div>
+            </div>
+
+            <!-- 曜日別分析 -->
+            <div class="analytics-grid">
+                <div class="card">
+                    <h2 class="section-title">曜日別発生件数</h2>
+                    <div class="chart-container" style="height: 300px; position: relative;">
+                        <canvas id="day-chart" style="display: block; width: 100%; height: 100%;"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="section-title">天候別発生件数</h2>
+                    <div class="chart-container" style="height: 300px; position: relative;">
+                        <canvas id="weather-chart" style="display: block; width: 100%; height: 100%;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 詳細統計テーブル -->
+            <div class="card">
+                <h2 class="section-title">詳細統計</h2>
+                <div class="stats-table-container">
+                    <table class="stats-table" id="stats-table">
+                        <thead>
+                            <tr>
+                                <th>項目</th>
+                                <th>件数</th>
+                                <th>割合</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stats-tbody">
+                            <!-- 統計データが動的に挿入されます -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 NLP ヒヤリハット報告システム</p>
+        </footer>
+    </div>
+
+    <script src="js/analytics.js?v=20260302"></script>
+</body>
+</html>

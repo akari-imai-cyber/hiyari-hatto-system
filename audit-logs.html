@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アクセスログ監視 - ヒヤリハット報告システム</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- 管理者認証 -->
+    <script>
+        const adminId = sessionStorage.getItem('admin_authenticated');
+        if (!adminId) {
+            const inputId = prompt('管理者IDを入力してください');
+            const inputPass = prompt('パスワードを入力してください');
+            if (inputId !== 'NLP_akari-imai' || inputPass !== 'tehara0425') {
+                alert('認証に失敗しました');
+                window.location.href = 'index.html';
+            } else {
+                sessionStorage.setItem('admin_authenticated', inputId);
+            }
+        }
+    </script>
+    
+    <script src="js/config.js?v=20260228k"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">🚛 ヒヤリハット報告システム</h1>
+                <nav class="main-nav">
+                    <a href="index.html">報告入力</a>
+                    <a href="dashboard.html">ダッシュボード</a>
+                    <a href="analytics.html">分析</a>
+                    <a href="admin.html">企業管理</a>
+                    <a href="audit-logs.html" class="active">アクセスログ</a>
+                </nav>
+            </div>
+        </header>
+
+        <main class="admin-container">
+            <div class="admin-header">
+                <h2>🔍 アクセスログ監視</h2>
+                <div class="button-group">
+                    <button id="refresh-btn" class="btn-primary">🔄 更新</button>
+                    <button id="export-csv-btn" class="btn-secondary">📥 CSV出力</button>
+                    <button id="logout-btn" class="btn-danger">🚪 ログアウト</button>
+                </div>
+            </div>
+
+            <!-- フィルター -->
+            <div class="filter-section">
+                <select id="filter-company">
+                    <option value="">すべての企業</option>
+                </select>
+                <select id="filter-action">
+                    <option value="">すべての操作</option>
+                    <option value="login">ログイン</option>
+                    <option value="logout">ログアウト</option>
+                    <option value="page_view">ページ閲覧</option>
+                    <option value="create_report">報告作成</option>
+                    <option value="update_report">報告更新</option>
+                    <option value="delete_report">報告削除</option>
+                    <option value="add_company">企業追加</option>
+                    <option value="delete_company">企業削除</option>
+                </select>
+                <select id="filter-status">
+                    <option value="">すべてのステータス</option>
+                    <option value="success">成功</option>
+                    <option value="failed">失敗</option>
+                    <option value="error">エラー</option>
+                </select>
+                <input type="date" id="filter-date" placeholder="日付フィルター">
+                <button id="apply-filter-btn" class="btn-primary">🔍 フィルター適用</button>
+                <button id="clear-filter-btn" class="btn-secondary">✖ クリア</button>
+            </div>
+
+            <!-- 統計情報 -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-info">
+                        <div class="stat-label">総ログ件数</div>
+                        <div class="stat-value" id="total-logs">0</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <div class="stat-label">成功</div>
+                        <div class="stat-value" id="success-logs">0</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">❌</div>
+                    <div class="stat-info">
+                        <div class="stat-label">失敗</div>
+                        <div class="stat-value" id="failed-logs">0</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔐</div>
+                    <div class="stat-info">
+                        <div class="stat-label">ログイン試行</div>
+                        <div class="stat-value" id="login-attempts">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ログテーブル -->
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>日時</th>
+                            <th>企業</th>
+                            <th>ユーザー</th>
+                            <th>操作</th>
+                            <th>対象</th>
+                            <th>IPアドレス</th>
+                            <th>ステータス</th>
+                            <th>詳細</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-list">
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 40px;">
+                                📊 ログを読み込み中...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/audit-logs.js?v=20260228k"></script>
+</body>
+</html>

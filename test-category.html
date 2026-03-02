@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カテゴリ選択テスト</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="card">
+                <h2>カテゴリ選択テスト</h2>
+                
+                <!-- 走行中/荷役中選択 -->
+                <div class="form-group">
+                    <label>どちらで起きた？</label>
+                    <div class="button-group">
+                        <button type="button" class="btn btn-outline category-btn" onclick="selectCategory('driving')">
+                            🚛 走行中
+                        </button>
+                        <button type="button" class="btn btn-outline category-btn" onclick="selectCategory('loading')">
+                            📦 荷役・作業中
+                        </button>
+                    </div>
+                    <input type="hidden" id="incident-category">
+                </div>
+
+                <!-- カテゴリボタン -->
+                <div class="form-group" id="what-category-group" style="display: none;">
+                    <label>何が起きた？（複数選択可）</label>
+                    <div id="what-category-buttons" class="category-button-grid">
+                        <!-- ボタンがここに挿入されます -->
+                    </div>
+                    <input type="hidden" id="what-category">
+                </div>
+
+                <!-- 補足メモ -->
+                <div class="form-group" id="category-memo-group" style="display: none;">
+                    <label for="category-memo">カテゴリの補足（任意）</label>
+                    <input type="text" id="category-memo" class="form-control" maxlength="50">
+                </div>
+
+                <!-- 選択結果表示 -->
+                <div class="form-group">
+                    <label>選択結果:</label>
+                    <div id="result" style="padding: 1rem; background: #f0f0f0; border-radius: 0.5rem;">
+                        何も選択されていません
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        // テスト用のカテゴリ選択関数
+        function selectCategory(category) {
+            console.log('selectCategory:', category);
+            document.getElementById('incident-category').value = category;
+            
+            // ボタンのアクティブ状態更新
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // カテゴリボタンを生成
+            updateWhatHappenedOptions(category);
+        }
+
+        function updateWhatHappenedOptions(category) {
+            console.log('updateWhatHappenedOptions:', category);
+            
+            const container = document.getElementById('what-category-buttons');
+            const group = document.getElementById('what-category-group');
+            const memoGroup = document.getElementById('category-memo-group');
+            
+            container.innerHTML = '';
+            
+            const categories = category === 'driving' ? DRIVING_CATEGORIES : LOADING_CATEGORIES;
+            console.log('カテゴリ配列:', categories);
+            
+            categories.forEach(cat => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'category-select-btn';
+                button.dataset.value = cat;
+                button.textContent = cat;
+                
+                button.addEventListener('click', function() {
+                    this.classList.toggle('selected');
+                    updateWhatCategoryValue();
+                });
+                
+                container.appendChild(button);
+            });
+            
+            // 表示
+            group.style.display = 'block';
+            memoGroup.style.display = 'block';
+            
+            console.log('ボタン生成完了');
+        }
+
+        function updateWhatCategoryValue() {
+            const selected = Array.from(document.querySelectorAll('.category-select-btn.selected'))
+                .map(btn => btn.dataset.value);
+            
+            document.getElementById('what-category').value = selected.join(', ');
+            
+            // 結果表示
+            const resultDiv = document.getElementById('result');
+            if (selected.length > 0) {
+                resultDiv.innerHTML = `<strong>選択済み:</strong><br>${selected.join('<br>')}`;
+                resultDiv.style.background = '#d1fae5';
+            } else {
+                resultDiv.innerHTML = '何も選択されていません';
+                resultDiv.style.background = '#f0f0f0';
+            }
+            
+            console.log('選択されたカテゴリ:', selected);
+        }
+    </script>
+</body>
+</html>

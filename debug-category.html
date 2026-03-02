@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デバッグ - カテゴリ選択</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .debug-section {
+            background: #f0f0f0;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        .category-button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .category-select-btn {
+            padding: 15px;
+            background: white;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .category-select-btn:hover {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+        .category-select-btn.selected {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: 2px solid #2563eb;
+            background: white;
+            color: #2563eb;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn.active {
+            background: #2563eb;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 カテゴリ選択デバッグページ</h1>
+
+    <div class="debug-section">
+        <h3>1. カテゴリ配列の確認</h3>
+        <div id="debug-categories">読み込み中...</div>
+    </div>
+
+    <div class="debug-section">
+        <h3>2. 走行中/荷役中を選択</h3>
+        <div class="btn-group">
+            <button class="btn" onclick="testSelectCategory('driving')">🚛 走行中</button>
+            <button class="btn" onclick="testSelectCategory('loading')">📦 荷役中</button>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <h3>3. カテゴリボタン表示エリア</h3>
+        <div id="what-category-buttons" class="category-button-grid">
+            <!-- ここにボタンが表示されます -->
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <h3>4. 選択結果</h3>
+        <div id="selected-result">何も選択されていません</div>
+    </div>
+
+    <script>
+        // カテゴリ配列を直接定義
+        const DRIVING_CATEGORIES = [
+            '急ブレーキ・急ハンドル',
+            '車両との接触寸前',
+            '歩行者・自転車との接触寸前',
+            '見落とし・確認ミス',
+            'バック・方向転換時のニアミス',
+            '車線変更・合流ヒヤリ',
+            '踏切・交差点ヒヤリ',
+            'その他'
+        ];
+
+        const LOADING_CATEGORIES = [
+            '荷崩れ・落下寸前',
+            '転倒・つまずき・滑り',
+            '挟まれ・巻き込まれ寸前',
+            '機材との接触',
+            '荷物の破損寸前',
+            'その他'
+        ];
+
+        // ページ読み込み時にカテゴリ配列を表示
+        window.addEventListener('DOMContentLoaded', function() {
+            const debugDiv = document.getElementById('debug-categories');
+            debugDiv.innerHTML = `
+                <p><strong>走行中カテゴリ (${DRIVING_CATEGORIES.length}個):</strong></p>
+                <ul>${DRIVING_CATEGORIES.map(c => '<li>' + c + '</li>').join('')}</ul>
+                <p><strong>荷役中カテゴリ (${LOADING_CATEGORIES.length}個):</strong></p>
+                <ul>${LOADING_CATEGORIES.map(c => '<li>' + c + '</li>').join('')}</ul>
+            `;
+        });
+
+        // カテゴリ選択のテスト関数
+        function testSelectCategory(category) {
+            console.log('testSelectCategory called:', category);
+            
+            const container = document.getElementById('what-category-buttons');
+            container.innerHTML = '';
+            
+            const categories = category === 'driving' ? DRIVING_CATEGORIES : LOADING_CATEGORIES;
+            
+            categories.forEach(cat => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'category-select-btn';
+                button.textContent = cat;
+                
+                button.addEventListener('click', function() {
+                    this.classList.toggle('selected');
+                    updateSelectedResult();
+                });
+                
+                container.appendChild(button);
+            });
+            
+            // ボタンのアクティブ状態を更新
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            updateSelectedResult();
+        }
+
+        // 選択結果を更新
+        function updateSelectedResult() {
+            const selected = Array.from(document.querySelectorAll('.category-select-btn.selected'))
+                .map(btn => btn.textContent);
+            
+            const resultDiv = document.getElementById('selected-result');
+            if (selected.length > 0) {
+                resultDiv.innerHTML = `<strong>選択中 (${selected.length}個):</strong><br>` + 
+                    selected.map(s => '✓ ' + s).join('<br>');
+                resultDiv.style.color = 'green';
+            } else {
+                resultDiv.innerHTML = '何も選択されていません';
+                resultDiv.style.color = 'gray';
+            }
+        }
+    </script>
+</body>
+</html>

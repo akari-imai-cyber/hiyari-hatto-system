@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ヒヤリハット報告システム</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Supabase JS ライブラリ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Supabase クライアント -->
+    <script src="js/config.js?v=20260228k"></script>
+    
+    <!-- Supabase Auth 認証システム -->
+    <script src="js/auth-supabase.js?v=20260301a"></script>
+    
+    <!-- 認証チェック実行 -->
+    <script>
+    (async function() {
+        // Supabaseクライアント初期化を待つ
+        if (typeof initializeApp === 'function') {
+            initializeApp();
+        }
+        
+        const authenticated = await checkAuthentication();
+        if (!authenticated) {
+            // アクセス拒否の場合は処理が中断される
+        }
+    })();
+    </script>
+    
+    <!-- ユーザー情報表示 -->
+    <script>
+    window.addEventListener('authComplete', function(e) {
+        const auth = e.detail;
+        const userInfo = document.getElementById('user-info');
+        const displayCompany = document.getElementById('display-company');
+        const displayEmail = document.getElementById('display-email');
+        const adminReportsLink = document.getElementById('admin-reports-link');
+        
+        if (auth && auth.authenticated) {
+            displayCompany.textContent = auth.companyName || auth.companyCode || '企業名不明';
+            displayEmail.textContent = auth.email || 'メール不明';
+            userInfo.style.display = 'flex';
+            
+            // 企業管理者 または システム管理者の場合は「報告管理」「ユーザー管理」リンクを表示
+            if (auth.role === 'company_admin' || auth.role === 'admin') {
+                adminReportsLink.style.display = 'inline-block';
+                const adminUsersLink = document.getElementById('admin-users-link');
+                if (adminUsersLink) {
+                    adminUsersLink.style.display = 'inline-block';
+                }
+            }
+        }
+    });
+    
+    async function handleLogout() {
+        if (confirm('ログアウトしますか？')) {
+            await window.supabaseClient.auth.signOut();
+            alert('ログアウトしました');
+            location.reload();
+        }
+    }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">🚛 ヒヤリハット報告システム</h1>
+                <div class="header-right">
+                    <div id="user-info" class="user-info" style="display: none;">
+                        <span class="user-company" id="display-company">読み込み中...</span>
+                        <span class="user-email" id="display-email">読み込み中...</span>
+                        <button class="btn-logout" onclick="handleLogout()" title="ログアウト">🚪</button>
+                    </div>
+                    <nav class="nav">
+                        <a href="index.html" class="nav-link active">報告入力</a>
+                        <a href="dashboard.html" class="nav-link">ダッシュボード</a>
+                        <a href="analytics.html" class="nav-link">分析</a>
+                        <a href="admin-reports.html" class="nav-link" id="admin-reports-link" style="display: none;">報告管理</a>
+                        <a href="admin-users.html" class="nav-link" id="admin-users-link" style="display: none;">ユーザー管理</a>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- 入口選択画面 -->
+            <div id="entry-selection" class="card">
+                <h2 class="section-title">報告の種類を選択してください</h2>
+                <div class="button-group">
+                    <button class="btn btn-primary btn-large" onclick="selectReportType('hiyari')">
+                        🟡 ヒヤリハット<br>
+                        <small>事故にはなっていない</small>
+                    </button>
+                    <button class="btn btn-danger btn-large" onclick="selectReportType('accident')">
+                        🔴 事故<br>
+                        <small>接触・損害が発生した</small>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 1: 必須入力フォーム -->
+            <form id="report-form" class="hidden">
+                <div class="card">
+                    <div class="step-indicator">
+                        <span class="step active">STEP 1</span>
+                        <span class="step-divider">→</span>
+                        <span class="step">STEP 2</span>
+                    </div>
+
+                    <h2 class="section-title">基本情報（必須）</h2>
+                    <p class="section-description">まずはこれだけ入力してください（30秒）</p>
+
+                    <input type="hidden" id="report-type" name="report_type">
+
+                    <!-- 発生日時 -->
+                    <div class="form-group">
+                        <label for="occurred-at" class="required">発生日時</label>
+                        <input type="datetime-local" id="occurred-at" name="occurred_at" class="form-control" required>
+                        <small style="color: #666; font-size: 12px;">※ 日本時間で入力してください</small>
+                    </div>
+
+                    <!-- 報告者 -->
+                    <div class="form-group">
+                        <label for="employee" class="required">報告者</label>
+                        <input type="text" id="employee" name="employee_name" class="form-control" 
+                               placeholder="例：田中一郎" required>
+                    </div>
+
+                    <!-- 発生場所 -->
+                    <div class="form-group">
+                        <label for="location" class="required">発生場所</label>
+                        <input type="text" id="location" name="location_text" class="form-control" 
+                               placeholder="例: 東京都江東区○○交差点付近" required>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="getCurrentLocation()">
+                            📍 現在地を取得
+                        </button>
+                    </div>
+
+                    <!-- 事象カテゴリ（分岐ポイント） -->
+                    <div class="form-group">
+                        <label class="required">どちらで起きた？</label>
+                        <div class="button-group">
+                            <button type="button" class="btn btn-outline category-btn" data-category="driving" onclick="selectCategory('driving')">
+                                🚛 走行中
+                            </button>
+                            <button type="button" class="btn btn-outline category-btn" data-category="loading" onclick="selectCategory('loading')">
+                                📦 荷役・作業中
+                            </button>
+                        </div>
+                        <input type="hidden" id="incident-category" name="incident_category" required>
+                    </div>
+
+                    <!-- 何が起きたか（カテゴリ選択） -->
+                    <div class="form-group" id="what-category-group" style="display: none;">
+                        <label class="required">何が起きた？（複数選択可）</label>
+                        <div id="what-category-buttons" class="category-button-grid">
+                            <!-- カテゴリボタンが動的に挿入されます -->
+                        </div>
+                        <input type="hidden" id="what-category" name="what_happened_category" required>
+                    </div>
+
+                    <!-- 補足メモ -->
+                    <div class="form-group" id="category-memo-group" style="display: none;">
+                        <label for="category-memo">カテゴリの補足（任意・50文字以内）</label>
+                        <input type="text" id="category-memo" name="category_memo" class="form-control" 
+                               maxlength="50" placeholder="例：右折待ち車両が急に発進">
+                        <small class="form-text">選択したカテゴリについて簡単に補足してください</small>
+                    </div>
+
+                    <!-- 何が起きたか（詳細テキスト） -->
+                    <div class="form-group">
+                        <label for="what-text" class="required">詳しい状況を説明してください</label>
+                        <textarea id="what-text" name="what_happened_text" class="form-control" rows="4" 
+                                  placeholder="例: 交差点で右折車が急に飛び出してきたため、急ブレーキで回避した" required></textarea>
+                        <small class="form-text">100文字程度で結構です</small>
+                    </div>
+
+                    <!-- 写真・動画 -->
+                    <div class="form-group">
+                        <label for="photos">写真・動画（任意）</label>
+                        <input type="file" id="photos" name="photos" class="form-control" 
+                               accept="image/*" multiple capture="environment">
+                        <small class="form-text">スマホカメラで撮影できます（画像のみ）</small>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="cancelForm()">キャンセル</button>
+                        <button type="button" class="btn btn-primary" onclick="submitStep1()">
+                            提出する（後から詳細追加可能）
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="goToStep2()">
+                            続けて詳細を入力 →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 2: 詳細入力フォーム -->
+                <div id="step2-form" class="card hidden">
+                    <div class="step-indicator">
+                        <span class="step completed">STEP 1</span>
+                        <span class="step-divider">→</span>
+                        <span class="step active">STEP 2</span>
+                    </div>
+
+                    <h2 class="section-title">詳細情報（任意）</h2>
+                    <p class="section-description">より詳しい情報があれば入力してください</p>
+
+                    <!-- 走行中の詳細情報 -->
+                    <div id="driving-details" class="detail-section hidden">
+                        <h3 class="subsection-title">走行状況</h3>
+                        
+                        <div class="form-group">
+                            <label for="driving-situation">走行状況</label>
+                            <select id="driving-situation" name="driving_situation" class="form-control">
+                                <option value="">選択してください</option>
+                                <option value="直進中">直進中</option>
+                                <option value="右折中">右折中</option>
+                                <option value="左折中">左折中</option>
+                                <option value="バック中">バック中</option>
+                                <option value="停車中">停車中</option>
+                                <option value="発進時">発進時</option>
+                                <option value="駐車時">駐車時</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="road-type">道路形状</label>
+                            <select id="road-type" name="road_type" class="form-control">
+                                <option value="">選択してください</option>
+                                <option value="交差点">交差点</option>
+                                <option value="直線">直線</option>
+                                <option value="カーブ">カーブ</option>
+                                <option value="構内">構内</option>
+                                <option value="高速道路">高速道路</option>
+                                <option value="踏切">踏切</option>
+                                <option value="狭路">狭路</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="other-party">相手の有無</label>
+                            <select id="other-party" name="other_party" class="form-control">
+                                <option value="">選択してください</option>
+                                <option value="なし">なし</option>
+                                <option value="車両">車両</option>
+                                <option value="歩行者">歩行者</option>
+                                <option value="自転車・二輪">自転車・二輪</option>
+                                <option value="工作物">工作物</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="weather">天候</label>
+                                <select id="weather" name="weather" class="form-control">
+                                    <option value="">選択</option>
+                                    <option value="晴">晴</option>
+                                    <option value="曇">曇</option>
+                                    <option value="雨">雨</option>
+                                    <option value="雪">雪</option>
+                                    <option value="霧">霧</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="road-surface">路面状況</label>
+                                <select id="road-surface" name="road_surface" class="form-control">
+                                    <option value="">選択</option>
+                                    <option value="乾燥">乾燥</option>
+                                    <option value="濡れ">濡れ</option>
+                                    <option value="凍結・積雪">凍結・積雪</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>ドラレコ映像</label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="dashcam_available" value="true"> あり
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="dashcam_available" value="false"> なし
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 荷役中の詳細情報 -->
+                    <div id="loading-details" class="detail-section hidden">
+                        <h3 class="subsection-title">作業状況</h3>
+                        
+                        <div class="form-group">
+                            <label for="work-phase">作業フェーズ</label>
+                            <select id="work-phase" name="work_phase" class="form-control">
+                                <option value="">選択してください</option>
+                                <option value="積み込み中">積み込み中</option>
+                                <option value="荷下ろし中">荷下ろし中</option>
+                                <option value="庫内作業中">庫内作業中</option>
+                                <option value="固縛中">固縛中</option>
+                                <option value="検品中">検品中</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="equipment">使用機材</label>
+                            <select id="equipment" name="equipment_used" class="form-control">
+                                <option value="">選択してください</option>
+                                <option value="台車">台車</option>
+                                <option value="ハンドパレット">ハンドパレット</option>
+                                <option value="フォークリフト">フォークリフト</option>
+                                <option value="手作業">手作業</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="load-status">積載状態</label>
+                            <select id="load-status" name="load_status" class="form-control">
+                                <option value="">選択してください</option>
+                                <option value="満載">満載</option>
+                                <option value="半積み">半積み</option>
+                                <option value="空車">空車</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="load-collapse">荷崩れの有無</label>
+                            <select id="load-collapse" name="load_collapse" class="form-control">
+                                <option value="">選択してください</option>
+                                <option value="発生した">発生した</option>
+                                <option value="危うく発生しそうだった">危うく発生しそうだった</option>
+                                <option value="なし">なし</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="temperature">温度帯</label>
+                            <select id="temperature" name="temperature_zone" class="form-control">
+                                <option value="">選択してください</option>
+                                <option value="常温">常温</option>
+                                <option value="冷蔵">冷蔵</option>
+                                <option value="冷凍">冷凍</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 原因分析セクション -->
+                    <div class="cause-section">
+                        <h3 class="subsection-title">原因分析</h3>
+                        
+                        <div class="form-group">
+                            <label>直接原因（複数選択可）</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="direct_causes" value="確認不足・見落とし"> 確認不足・見落とし
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="direct_causes" value="判断ミス"> 判断ミス
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="direct_causes" value="焦り・急いでいた" data-trigger="rush"> 焦り・急いでいた
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="direct_causes" value="体調不良・疲労" data-trigger="fatigue"> 体調不良・疲労
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="direct_causes" value="ルート・環境への不慣れ" data-trigger="unfamiliar"> ルート・環境への不慣れ
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="direct_causes" value="車両・積載の問題" data-trigger="vehicle"> 車両・積載の問題
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="direct_causes" value="相手の行動"> 相手（他車・歩行者）の行動
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 条件展開: 焦りの原因 -->
+                        <div id="rush-details" class="conditional-section hidden">
+                            <label>焦りの原因は？（複数選択可）</label>
+                            <div class="checkbox-group indent">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="cause_rush" value="配送遅延が発生していた"> 配送遅延が発生していた
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="cause_rush" value="配送件数が多すぎた"> 配送件数が多すぎた
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="cause_rush" value="渋滞でスケジュールが崩れた"> 渋滞でスケジュールが崩れた
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="cause_rush" value="上長・荷主からのプレッシャー"> 上長・荷主からのプレッシャー
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 条件展開: 疲労の原因 -->
+                        <div id="fatigue-details" class="conditional-section hidden">
+                            <label>状態は？（複数選択可）</label>
+                            <div class="checkbox-group indent">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="cause_fatigue" value="睡眠不足（6時間未満）"> 睡眠不足（6時間未満）
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="cause_fatigue" value="食事が取れていなかった"> 食事が取れていなかった
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="cause_fatigue" value="身体の痛み・疲労蓄積"> 身体の痛み・疲労蓄積
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="cause_fatigue" value="体調不良（風邪・頭痛など）"> 体調不良（風邪・頭痛など）
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 条件展開: 不慣れの原因 -->
+                        <div id="unfamiliar-details" class="conditional-section hidden">
+                            <label>不慣れの理由は？（複数選択可）</label>
+                            <div class="checkbox-group indent">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="cause_unfamiliar" value="初めて走るルートだった"> 初めて走るルートだった
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="cause_unfamiliar" value="当日ルート変更があった"> 当日ルート変更があった
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="cause_unfamiliar" value="新しい納品先・積み地だった"> 新しい納品先・積み地だった
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="cause_unfamiliar" value="夜間・悪天候で勝手が違った"> 夜間・悪天候で勝手が違った
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 条件展開: 車両の問題 -->
+                        <div id="vehicle-details" class="conditional-section hidden">
+                            <label>どんな問題？（複数選択可）</label>
+                            <div class="checkbox-group indent">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="cause_vehicle" value="タイヤ・ブレーキに違和感"> タイヤ・ブレーキに違和感があった
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="cause_vehicle" value="荷物の固縛が不十分"> 荷物の固縛が不十分だった
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="cause_vehicle" value="高積みで視界不良"> 高積みで前方視界が確保できなかった
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="cause_vehicle" value="車両サイズが違った"> 車両サイズが普段と違った（代車など）
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 対策・フォローセクション -->
+                    <div class="action-section">
+                        <h3 class="subsection-title">対策・フォロー</h3>
+                        
+                        <div class="form-group">
+                            <label for="immediate-action">自分がとった対処</label>
+                            <textarea id="immediate-action" name="immediate_action" class="form-control" rows="3"
+                                      placeholder="例: 急ブレーキで停止、路肩に寄せて後続確認"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="prevention">再発防止の提案</label>
+                            <textarea id="prevention" name="prevention_proposal" class="form-control" rows="3"
+                                      placeholder="例: 交差点手前でさらに速度を落とすようにする"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="severity">重大度（自己評価）</label>
+                            <div class="rating-group">
+                                <label class="rating-label">
+                                    <input type="radio" name="severity_rating" value="1">
+                                    <span class="rating-star">★☆☆☆☆</span>
+                                    <span class="rating-text">軽微</span>
+                                </label>
+                                <label class="rating-label">
+                                    <input type="radio" name="severity_rating" value="2">
+                                    <span class="rating-star">★★☆☆☆</span>
+                                    <span class="rating-text">やや注意</span>
+                                </label>
+                                <label class="rating-label">
+                                    <input type="radio" name="severity_rating" value="3">
+                                    <span class="rating-star">★★★☆☆</span>
+                                    <span class="rating-text">注意</span>
+                                </label>
+                                <label class="rating-label">
+                                    <input type="radio" name="severity_rating" value="4">
+                                    <span class="rating-star">★★★★☆</span>
+                                    <span class="rating-text">重大</span>
+                                </label>
+                                <label class="rating-label">
+                                    <input type="radio" name="severity_rating" value="5">
+                                    <span class="rating-star">★★★★★</span>
+                                    <span class="rating-text">最重要</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="order-id">オーダーID（任意・後から追記可能）</label>
+                            <input type="text" id="order-id" name="order_id" class="form-control" 
+                                   placeholder="例: ORD-20251219-0088">
+                            <small class="form-text">配送中の場合は記入してください</small>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="backToStep1()">← STEP 1に戻る</button>
+                        <button type="submit" class="btn btn-success btn-large">完了して提出</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- 提出完了メッセージ -->
+            <div id="success-message" class="card success-card hidden">
+                <div class="success-icon">✓</div>
+                <h2>報告が完了しました</h2>
+                <p class="success-note">後から詳細情報を追加することもできます。</p>
+                <div class="form-actions">
+                    <button class="btn btn-primary" onclick="location.reload()">新しい報告を入力</button>
+                    <a href="dashboard.html" class="btn btn-secondary">ダッシュボードを見る</a>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 NLP ヒヤリハット報告システム</p>
+        </footer>
+    </div>
+
+    <!-- Supabase クライアント -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- カテゴリ定義を直接HTMLに埋め込む -->
+    <script>
+        // カテゴリ配列をグローバルに定義
+        window.DRIVING_CATEGORIES = [
+            '急ブレーキ・急ハンドル',
+            '車両との接触寸前',
+            '歩行者・自転車との接触寸前',
+            '見落とし・確認ミス',
+            'バック・方向転換時のニアミス',
+            '車線変更・合流ヒヤリ',
+            '踏切・交差点ヒヤリ',
+            'その他'
+        ];
+
+        window.LOADING_CATEGORIES = [
+            '荷崩れ・落下寸前',
+            '転倒・つまずき・滑り',
+            '挟まれ・巻き込まれ寸前',
+            '機材との接触',
+            '荷物の破損寸前',
+            'その他'
+        ];
+        
+        console.log('✅ カテゴリ配列をHTMLで定義しました');
+        console.log('走行中:', window.DRIVING_CATEGORIES.length, '個');
+        console.log('荷役中:', window.LOADING_CATEGORIES.length, '個');
+    </script>
+    
+    <script src="js/main.js?v=20260228e"></script>
+    
+    <!-- カテゴリ選択の動作確認用スクリプト -->
+    <script>
+        // ページ読み込み後に動作確認
+        window.addEventListener('load', function() {
+            console.log('=== カテゴリ選択デバッグ ===');
+            console.log('DRIVING_CATEGORIES:', typeof DRIVING_CATEGORIES, DRIVING_CATEGORIES);
+            console.log('LOADING_CATEGORIES:', typeof LOADING_CATEGORIES, LOADING_CATEGORIES);
+            console.log('selectCategory:', typeof selectCategory);
+            
+            // 要素の存在確認
+            const buttons = document.getElementById('what-category-buttons');
+            const group = document.getElementById('what-category-group');
+            console.log('what-category-buttons:', buttons);
+            console.log('what-category-group:', group);
+        });
+    </script>
+</body>
+</html>

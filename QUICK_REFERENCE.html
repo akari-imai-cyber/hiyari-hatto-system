@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📙 クイックリファレンスカード</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: #f0f0f0;
+            padding: 20px;
+        }
+        
+        .page {
+            width: 210mm;
+            height: 297mm;
+            background: white;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            position: relative;
+            page-break-after: always;
+        }
+        
+        /* 表面 */
+        .front {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15mm;
+        }
+        
+        .front .header {
+            text-align: center;
+            border-bottom: 4px solid white;
+            padding-bottom: 10mm;
+            margin-bottom: 10mm;
+        }
+        
+        .front .header h1 {
+            font-size: 32pt;
+            font-weight: 900;
+            margin-bottom: 5mm;
+        }
+        
+        .front .header .subtitle {
+            font-size: 18pt;
+            font-weight: 500;
+        }
+        
+        .section-box {
+            background: white;
+            color: #333;
+            border-radius: 8px;
+            padding: 5mm;
+            margin-bottom: 5mm;
+        }
+        
+        .section-box h2 {
+            color: #667eea;
+            font-size: 16pt;
+            font-weight: 700;
+            margin-bottom: 3mm;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 2mm;
+        }
+        
+        .section-box h3 {
+            color: #764ba2;
+            font-size: 12pt;
+            font-weight: 700;
+            margin-top: 3mm;
+            margin-bottom: 2mm;
+        }
+        
+        .section-box table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2mm;
+        }
+        
+        .section-box table th {
+            background: #667eea;
+            color: white;
+            padding: 2mm;
+            text-align: left;
+            font-size: 9pt;
+            font-weight: 700;
+        }
+        
+        .section-box table td {
+            padding: 2mm;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 9pt;
+        }
+        
+        .section-box ul {
+            margin-left: 5mm;
+            font-size: 10pt;
+        }
+        
+        .section-box ul li {
+            margin-bottom: 1mm;
+        }
+        
+        .url-box {
+            background: #f0f0f0;
+            padding: 3mm;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 9pt;
+            margin: 2mm 0;
+        }
+        
+        .role-badge {
+            display: inline-block;
+            background: #764ba2;
+            color: white;
+            padding: 1mm 3mm;
+            border-radius: 3px;
+            font-size: 8pt;
+            font-weight: 700;
+            margin-right: 2mm;
+        }
+        
+        /* 裏面 */
+        .back {
+            background: white;
+            padding: 15mm;
+        }
+        
+        .back .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5mm;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 5mm;
+        }
+        
+        .back .header h1 {
+            font-size: 20pt;
+            font-weight: 900;
+        }
+        
+        .back .section-box {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 5mm;
+            margin-bottom: 5mm;
+        }
+        
+        .back .section-box h2 {
+            color: #667eea;
+            font-size: 14pt;
+            font-weight: 700;
+            margin-bottom: 3mm;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 2mm;
+        }
+        
+        .back .section-box h3 {
+            color: #764ba2;
+            font-size: 11pt;
+            font-weight: 700;
+            margin-top: 3mm;
+            margin-bottom: 2mm;
+        }
+        
+        .flow-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 3mm;
+            margin: 2mm 0;
+            font-size: 9pt;
+        }
+        
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2mm;
+        }
+        
+        .flow-number {
+            background: #667eea;
+            color: white;
+            width: 8mm;
+            height: 8mm;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-right: 3mm;
+            flex-shrink: 0;
+        }
+        
+        .emergency-box {
+            background: #ffebee;
+            border: 3px solid #f44336;
+            border-radius: 8px;
+            padding: 4mm;
+            margin-top: 5mm;
+        }
+        
+        .emergency-box h2 {
+            color: #f44336;
+            font-size: 14pt;
+            font-weight: 900;
+            margin-bottom: 3mm;
+            text-align: center;
+        }
+        
+        .footer {
+            position: absolute;
+            bottom: 10mm;
+            left: 15mm;
+            right: 15mm;
+            text-align: center;
+            font-size: 8pt;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 3mm;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .page {
+                box-shadow: none;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 表面 -->
+    <div class="page front">
+        <div class="header">
+            <h1>📙 クイックリファレンス</h1>
+            <p class="subtitle">ヒヤリハット報告システム</p>
+        </div>
+        
+        <div class="section-box">
+            <h2>🔐 ログイン情報</h2>
+            <div class="url-box">
+                <strong>URL:</strong> https://stellular-profiterole-2ff0a2.netlify.app/
+            </div>
+            <table>
+                <tr>
+                    <th>項目</th>
+                    <th>入力内容</th>
+                </tr>
+                <tr>
+                    <td><strong>企業コード</strong></td>
+                    <td>会社から指定されたコード（例: nlp-test）</td>
+                </tr>
+                <tr>
+                    <td><strong>メールアドレス</strong></td>
+                    <td>あなたのメールアドレス</td>
+                </tr>
+                <tr>
+                    <td><strong>パスワード</strong></td>
+                    <td>会社から指定されたパスワード</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="section-box">
+            <h2>👥 ロール（役割）と権限</h2>
+            
+            <h3><span class="role-badge">👤</span>一般ユーザー（ドライバー）</h3>
+            <ul>
+                <li>✅ ヒヤリハット報告の作成</li>
+                <li>✅ 自分の報告の閲覧</li>
+                <li>✅ 修正依頼の送信</li>
+                <li>❌ 報告の編集（修正依頼で対応）</li>
+            </ul>
+            
+            <h3><span class="role-badge">👨‍💼</span>企業管理者</h3>
+            <ul>
+                <li>✅ 自社のすべての報告の閲覧・編集</li>
+                <li>✅ 自社のユーザー管理</li>
+                <li>✅ 修正依頼への対応</li>
+                <li>✅ データ分析・CSVエクスポート</li>
+                <li>❌ 他社のデータ閲覧</li>
+            </ul>
+            
+            <h3><span class="role-badge">🔧</span>システム管理者</h3>
+            <ul>
+                <li>✅ 全企業のデータ閲覧・編集</li>
+                <li>✅ 企業管理（追加・削除）</li>
+                <li>✅ 全ユーザー管理</li>
+                <li>✅ システム全体の管理</li>
+            </ul>
+        </div>
+        
+        <div class="section-box">
+            <h2>🎯 主要機能へのアクセス</h2>
+            <table>
+                <tr>
+                    <th>機能</th>
+                    <th>アクセス方法</th>
+                    <th>権限</th>
+                </tr>
+                <tr>
+                    <td><strong>報告入力</strong></td>
+                    <td>ナビ: 🏠 報告入力</td>
+                    <td>全員</td>
+                </tr>
+                <tr>
+                    <td><strong>ダッシュボード</strong></td>
+                    <td>ナビ: 📊 ダッシュボード</td>
+                    <td>全員</td>
+                </tr>
+                <tr>
+                    <td><strong>分析</strong></td>
+                    <td>ナビ: 📈 分析</td>
+                    <td>全員</td>
+                </tr>
+                <tr>
+                    <td><strong>報告管理</strong></td>
+                    <td>ナビ: 📋 報告管理</td>
+                    <td>管理者のみ</td>
+                </tr>
+                <tr>
+                    <td><strong>ユーザー管理</strong></td>
+                    <td>ナビ: 👥 ユーザー管理</td>
+                    <td>管理者のみ</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="section-box">
+            <h2>📊 報告ステータス</h2>
+            <table>
+                <tr>
+                    <th>ステータス</th>
+                    <th>意味</th>
+                </tr>
+                <tr>
+                    <td><strong>未確認</strong></td>
+                    <td>報告後、まだ確認されていない</td>
+                </tr>
+                <tr>
+                    <td><strong>確認済み</strong></td>
+                    <td>内容確認完了、対応検討中</td>
+                </tr>
+                <tr>
+                    <td><strong>対応中</strong></td>
+                    <td>改善策を実施中</td>
+                </tr>
+                <tr>
+                    <td><strong>完了</strong></td>
+                    <td>すべての対応が完了</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="footer">
+            <p><strong>ヒヤリハット報告システム v1.0</strong> | 作成日: 2026年3月1日</p>
+        </div>
+    </div>
+    
+    <!-- 裏面 -->
+    <div class="page back">
+        <div class="header">
+            <h1>📘 操作フロー & トラブルシューティング</h1>
+        </div>
+        
+        <div class="section-box">
+            <h2>📝 ヒヤリハット報告の入力フロー</h2>
+            
+            <div class="flow-box">
+                <div class="flow-step">
+                    <div class="flow-number">1</div>
+                    <div><strong>ログイン</strong> → 企業コード、メール、パスワードを入力</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">2</div>
+                    <div><strong>基本情報入力</strong> → 報告者名、発生日時、場所</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">3</div>
+                    <div><strong>「次へ」</strong>をクリック</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">4</div>
+                    <div><strong>詳細入力</strong> → カテゴリ選択、詳細記述</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">5</div>
+                    <div><strong>「報告を送信」</strong>をクリック → 完了！</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section-box">
+            <h2>📩 修正依頼の送信フロー</h2>
+            
+            <div class="flow-box">
+                <div class="flow-step">
+                    <div class="flow-number">1</div>
+                    <div><strong>ダッシュボード</strong>を開く</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">2</div>
+                    <div>修正したい報告の<strong>「詳細」</strong>をクリック</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">3</div>
+                    <div>画面下部の<strong>「修正依頼」</strong>セクションに修正内容を記入</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">4</div>
+                    <div><strong>「📤 修正依頼を送信」</strong>をクリック → 完了！</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section-box">
+            <h2>👥 ユーザー追加フロー（企業管理者）</h2>
+            
+            <h3>方法: Supabase経由（推奨）</h3>
+            <div class="flow-box">
+                <div class="flow-step">
+                    <div class="flow-number">1</div>
+                    <div>Supabase → Authentication → Users → Add user</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">2</div>
+                    <div>メール、パスワード入力、<strong>Auto Confirm User</strong>をチェック</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">3</div>
+                    <div>作成されたユーザーの<strong>UID</strong>をコピー</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">4</div>
+                    <div>SQL EditorでINSERT文を実行（プロフィール情報追加）</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">5</div>
+                    <div>ユーザー管理画面で確認 → 完了！</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section-box">
+            <h2>🔧 トラブルシューティング</h2>
+            
+            <h3>❌ ログインできない</h3>
+            <ul style="font-size: 9pt; margin-left: 5mm;">
+                <li>✓ 企業コード、メール、パスワードを再確認</li>
+                <li>✓ ブラウザキャッシュをクリア（Ctrl + Shift + Del）</li>
+                <li>✓ シークレットモードで試す（Ctrl + Shift + N）</li>
+                <li>✓ 企業管理者に連絡</li>
+            </ul>
+            
+            <h3>❌ リンクが表示されない（管理者機能）</h3>
+            <ul style="font-size: 9pt; margin-left: 5mm;">
+                <li>✓ ハードリフレッシュ（Ctrl + Shift + R）</li>
+                <li>✓ ロールがcompany_adminか確認（F12コンソール）</li>
+                <li>✓ 最新版がデプロイされているか確認</li>
+            </ul>
+            
+            <h3>❌ GPS位置情報が取得できない</h3>
+            <ul style="font-size: 9pt; margin-left: 5mm;">
+                <li>✓ ブラウザの位置情報許可を確認</li>
+                <li>✓ デバイスのGPS機能を確認</li>
+                <li>✓ 手動で住所を入力（GPS不要）</li>
+            </ul>
+            
+            <h3>❌ 画面が正しく表示されない</h3>
+            <ul style="font-size: 9pt; margin-left: 5mm;">
+                <li>✓ ブラウザを最新版に更新</li>
+                <li>✓ ページをリロード（F5）</li>
+                <li>✓ 別のブラウザで試す</li>
+            </ul>
+        </div>
+        
+        <div class="emergency-box">
+            <h2>🆘 緊急連絡先</h2>
+            <table style="width: 100%; border: none;">
+                <tr style="border: none;">
+                    <td style="border: none; padding: 2mm; font-size: 10pt;"><strong>一般的な質問</strong></td>
+                    <td style="border: none; padding: 2mm; font-size: 10pt;">→ 企業管理者</td>
+                </tr>
+                <tr style="border: none;">
+                    <td style="border: none; padding: 2mm; font-size: 10pt;"><strong>ログイン問題</strong></td>
+                    <td style="border: none; padding: 2mm; font-size: 10pt;">→ 企業管理者</td>
+                </tr>
+                <tr style="border: none;">
+                    <td style="border: none; padding: 2mm; font-size: 10pt;"><strong>システムエラー</strong></td>
+                    <td style="border: none; padding: 2mm; font-size: 10pt;">→ システム管理者</td>
+                </tr>
+            </table>
+            <div style="text-align: center; margin-top: 3mm; font-size: 11pt;">
+                <strong>システム管理者:</strong> akari-imai@tehara.co.jp
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>ヒヤリハット報告システム v1.0</strong> | システム管理者: akari-imai@tehara.co.jp</p>
+        </div>
+    </div>
+</body>
+</html>

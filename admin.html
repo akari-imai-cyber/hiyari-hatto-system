@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企業管理画面 - ヒヤリハット報告システム</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Supabase JS ライブラリ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Supabase クライアント -->
+    <script src="js/config.js?v=20260301a"></script>
+    
+    <!-- Supabase Auth 管理者認証 -->
+    <script>
+        // ページが読み込まれる前に認証チェック
+        (async function() {
+            // Supabase クライアントを初期化
+            const { createClient } = supabase;
+            const supabaseUrl = 'https://yimeoggmsubtcmxddyat.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpbWVvZ2dtc3VidGNteGRkeWF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5OTcwMTcsImV4cCI6MjA4NzU3MzAxN30.wQY_t9umGhqshO1UQJ-aHj3MPUimzJgOso3W9YmKYlA';
+            const supabaseClient = createClient(supabaseUrl, supabaseKey);
+            
+            // 既存のセッションを確認
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            
+            if (session) {
+                // セッション存在 → 管理者権限を確認
+                const { data: profile, error } = await supabaseClient
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .single();
+                
+                if (profile && profile.role === 'admin') {
+                    console.log('✅ 管理者認証済み:', session.user.email);
+                    return; // 認証OK、ページ表示
+                }
+            }
+            
+            // 認証が必要 → ログインプロンプト
+            const email = prompt('管理者メールアドレスを入力してください\n例: akari-imai@tehara.co.jp');
+            if (!email || email.trim() === '') {
+                showAccessDenied('メールアドレスが入力されていません。');
+                return;
+            }
+            
+            const password = prompt('パスワードを入力してください');
+            if (!password || password.trim() === '') {
+                showAccessDenied('パスワードが入力されていません。');
+                return;
+            }
+            
+            // Supabase Auth でログイン
+            console.log('🔐 ログイン試行:', email.trim());
+            console.log('🔐 パスワード長:', password.length);
+            
+            const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+                email: email.trim(),
+                password: password
+            });
+            
+            console.log('📡 認証レスポンス:', authData);
+            console.log('❌ 認証エラー:', authError);
+            
+            if (authError) {
+                console.error('❌ 認証失敗の詳細:', {
+                    message: authError.message,
+                    status: authError.status,
+                    name: authError.name
+                });
+                alert('認証に失敗しました。\n' + authError.message);
+                showAccessDenied('メールアドレス または パスワードが正しくありません。');
+                return;
+            }
+            
+            // 管理者権限を確認
+            const { data: profile, error: profileError } = await supabaseClient
+                .from('profiles')
+                .select('role')
+                .eq('id', authData.user.id)
+                .single();
+            
+            if (profileError || !profile || profile.role !== 'admin') {
+                await supabaseClient.auth.signOut();
+                alert('管理者権限がありません。');
+                showAccessDenied('この画面にアクセスする権限がありません。');
+                return;
+            }
+            
+            console.log('✅ 管理者ログイン成功:', authData.user.email);
+            location.reload(); // ページをリロードして正常表示
+            
+        })();
+        
+        function showAccessDenied(message) {
+            document.write('<div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%;"><div style="text-align: center; color: white; padding: 40px; background: rgba(255,255,255,0.1); border-radius: 20px;"><div style="font-size: 80px; margin-bottom: 20px;">🔒</div><h1 style="font-size: 2rem; margin-bottom: 10px;">アクセスが拒否されました</h1><p style="font-size: 1.1rem; margin-bottom: 30px;">' + message + '</p><button onclick="location.reload()" style="padding: 15px 30px; font-size: 1rem; background: white; color: #667eea; border: none; border-radius: 10px; cursor: pointer; font-weight: 600;">再試行</button></div></div>');
+            throw new Error('Authentication failed');
+        }
+    </script>
+</head>
+<body>
+    <!-- ナビゲーション -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-icon">🚛</span>
+                <span class="logo-text">ヒヤリハット報告システム</span>
+            </div>
+            <div class="nav-right">
+                <div id="admin-user-info" class="admin-user-info" style="display: none;">
+                    <span class="admin-label">👤 管理者:</span>
+                    <span class="admin-email" id="admin-display-email">読み込み中...</span>
+                    <button class="btn-admin-logout" onclick="adminLogout()" title="ログアウト">🚪</button>
+                </div>
+                <div class="nav-links">
+                    <a href="index.html">報告入力</a>
+                    <a href="dashboard.html">ダッシュボード</a>
+                    <a href="analytics.html">分析</a>
+                    <a href="admin.html" class="active">企業管理</a>
+                    <a href="admin-reports.html">報告管理</a>
+                    <a href="admin-users.html">ユーザー管理</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- メインコンテンツ -->
+    <div class="admin-container">
+        <!-- ヘッダー -->
+        <div class="admin-header">
+            <h1>🏢 企業管理画面</h1>
+            <p>企業の追加・編集・削除、認証情報の管理を行います</p>
+        </div>
+
+        <!-- 統計カード -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">🏢</div>
+                <div class="stat-label">登録企業数</div>
+                <div class="stat-value" id="total-companies">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-label">総報告数</div>
+                <div class="stat-value" id="total-reports">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-label">Premiumプラン</div>
+                <div class="stat-value" id="premium-count">0</div>
+            </div>
+        </div>
+
+        <!-- アクションボタン -->
+        <div class="admin-actions">
+            <button class="btn-admin btn-add" id="btn-add-company">
+                ➕ 新しい企業を追加
+            </button>
+            <button class="btn-admin btn-export" id="btn-export-auth">
+                📥 認証情報をエクスポート
+            </button>
+            <button class="btn-admin btn-export" id="btn-export-anonymized" style="background: #10b981;">
+                📊 匿名化データをエクスポート
+            </button>
+            <button class="btn-admin btn-refresh" id="btn-refresh">
+                🔄 更新
+            </button>
+            <button class="btn-admin" id="btn-logout" style="background: #ef4444; color: white;">
+                🚪 ログアウト
+            </button>
+        </div>
+
+        <!-- 企業一覧テーブル -->
+        <div class="companies-table-container">
+            <table class="companies-table">
+                <thead>
+                    <tr>
+                        <th>企業コード</th>
+                        <th>企業名</th>
+                        <th>業界</th>
+                        <th>プラン</th>
+                        <th>作成日</th>
+                        <th>アクション</th>
+                    </tr>
+                </thead>
+                <tbody id="companies-list">
+                    <!-- 動的に生成 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 企業追加モーダル -->
+    <div class="modal" id="add-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>新しい企業を追加</h2>
+                <button class="modal-close" type="button" data-modal="add-modal">×</button>
+            </div>
+            <form id="add-company-form">
+                <div class="form-group">
+                    <label for="add-company-code">企業コード *</label>
+                    <input type="text" id="add-company-code" required 
+                           pattern="[a-z0-9-]+" 
+                           placeholder="例: abc-logistics">
+                    <p class="form-help">小文字英数字とハイフンのみ使用可能</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="add-company-name">企業名 *</label>
+                    <input type="text" id="add-company-name" required 
+                           placeholder="例: ABC物流株式会社">
+                </div>
+                
+                <div class="form-group">
+                    <label for="add-password">パスワード *</label>
+                    <input type="text" id="add-password" required 
+                           placeholder="例: abc2026">
+                    <p class="form-help">ログイン時に使用するパスワード</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="add-industry">業界</label>
+                    <input type="text" id="add-industry" 
+                           placeholder="例: 物流業">
+                </div>
+                
+                <div class="form-group">
+                    <label for="add-plan">プラン</label>
+                    <select id="add-plan">
+                        <option value="free">Free（無料）</option>
+                        <option value="premium">Premium（有料）</option>
+                    </select>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" data-modal="add-modal">
+                        キャンセル
+                    </button>
+                    <button type="submit" class="btn-submit">
+                        追加する
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 企業編集モーダル -->
+    <div class="modal" id="edit-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>企業情報を編集</h2>
+                <button class="modal-close" type="button" data-modal="edit-modal">×</button>
+            </div>
+            <form id="edit-company-form">
+                <input type="hidden" id="edit-company-id">
+                <input type="hidden" id="edit-company-code-old">
+                
+                <div class="form-group">
+                    <label for="edit-company-code">企業コード</label>
+                    <input type="text" id="edit-company-code" disabled 
+                           style="background: #f3f4f6; cursor: not-allowed;">
+                    <p class="form-help">企業コードは変更できません</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-company-name">企業名 *</label>
+                    <input type="text" id="edit-company-name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-password">新しいパスワード</label>
+                    <input type="text" id="edit-password" 
+                           placeholder="変更しない場合は空欄のまま">
+                    <p class="form-help">空欄の場合、パスワードは変更されません</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-industry">業界</label>
+                    <input type="text" id="edit-industry">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-plan">プラン</label>
+                    <select id="edit-plan">
+                        <option value="free">Free（無料）</option>
+                        <option value="premium">Premium（有料）</option>
+                    </select>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" data-modal="edit-modal">
+                        キャンセル
+                    </button>
+                    <button type="submit" class="btn-submit">
+                        保存する
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 認証情報エクスポートモーダル -->
+    <div class="modal" id="export-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>認証情報エクスポート</h2>
+                <button class="modal-close" type="button" data-modal="export-modal">×</button>
+            </div>
+            <p>以下のコードを <code>js/auth-multitenancy.js</code> の <code>COMPANY_CREDENTIALS</code> に貼り付けてください。</p>
+            <pre class="json-output" id="json-output">// 読み込み中...</pre>
+            <button class="copy-button" id="btn-copy-clipboard">
+                📋 クリップボードにコピー
+            </button>
+            <div class="form-actions" style="margin-top: 20px;">
+                <button class="btn-cancel" type="button" data-modal="export-modal">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/admin.js?v=20260301c"></script>
+</body>
+</html>

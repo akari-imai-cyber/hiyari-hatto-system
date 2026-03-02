@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📘 ドライバー向け簡単操作マニュアル</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .toc {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+        }
+        
+        .toc h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .toc ul {
+            list-style: none;
+        }
+        
+        .toc li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .toc li:last-child {
+            border-bottom: none;
+        }
+        
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        
+        .section {
+            margin-bottom: 50px;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .section h3 {
+            color: #764ba2;
+            font-size: 1.5em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        
+        .section h4 {
+            color: #555;
+            font-size: 1.2em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 5px solid #2196F3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .success-box {
+            background: #e8f5e9;
+            border-left: 5px solid #4CAF50;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .warning-box {
+            background: #fff3e0;
+            border-left: 5px solid #FF9800;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .error-box {
+            background: #ffebee;
+            border-left: 5px solid #f44336;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        table th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        table tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 10px 5px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: transform 0.3s;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .checklist li:before {
+            content: "☐ ";
+            font-size: 1.5em;
+            color: #667eea;
+            margin-right: 10px;
+        }
+        
+        code {
+            background: #f5f5f5;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        .footer {
+            background: #2d2d2d;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .footer p {
+            margin: 5px 0;
+        }
+        
+        .print-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #667eea;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.3s;
+        }
+        
+        .print-button:hover {
+            transform: scale(1.1);
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+            }
+            .print-button {
+                display: none;
+            }
+            .section {
+                page-break-inside: avoid;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            .content {
+                padding: 20px;
+            }
+            .print-button {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📘 ドライバー向け簡単操作マニュアル</h1>
+            <p class="subtitle">ヒヤリハット報告システム</p>
+            <p style="margin-top: 20px; opacity: 0.8;">バージョン 1.0 | 最終更新: 2026年3月1日</p>
+        </div>
+        
+        <div class="content">
+            <!-- 目次 -->
+            <div class="toc">
+                <h2>📋 目次</h2>
+                <ul>
+                    <li><a href="#overview">1. システムの概要</a></li>
+                    <li><a href="#login">2. ログイン方法</a></li>
+                    <li><a href="#report">3. ヒヤリハット報告の入力</a></li>
+                    <li><a href="#view">4. 過去の報告を確認する</a></li>
+                    <li><a href="#edit-request">5. 報告内容の修正を依頼する</a></li>
+                    <li><a href="#faq">6. よくある質問（FAQ）</a></li>
+                    <li><a href="#support">7. 困ったときは</a></li>
+                </ul>
+            </div>
+            
+            <!-- システムの概要 -->
+            <div class="section" id="overview">
+                <h2>システムの概要</h2>
+                
+                <h3>このシステムでできること</h3>
+                <div class="success-box">
+                    <p>✅ ヒヤリハット報告を簡単に入力</p>
+                    <p>✅ 過去の報告を確認</p>
+                    <p>✅ 報告内容の修正を依頼</p>
+                    <p>✅ スマートフォンでも操作可能</p>
+                </div>
+                
+                <h3>対象者</h3>
+                <ul>
+                    <li>ドライバー（一般ユーザー）</li>
+                    <li>運行業務に従事する方</li>
+                </ul>
+            </div>
+            
+            <!-- ログイン方法 -->
+            <div class="section" id="login">
+                <h2>ログイン方法</h2>
+                
+                <h3>1️⃣ ログイン画面を開く</h3>
+                <p>以下のURLにアクセスしてください：</p>
+                <div class="code-block">
+https://stellular-profiterole-2ff0a2.netlify.app/index.html
+                </div>
+                <a href="https://stellular-profiterole-2ff0a2.netlify.app/index.html" class="button" target="_blank">🔗 ログイン画面を開く</a>
+                
+                <h3>2️⃣ ログイン情報を入力</h3>
+                <table>
+                    <tr>
+                        <th>項目</th>
+                        <th>入力内容</th>
+                        <th>例</th>
+                    </tr>
+                    <tr>
+                        <td><strong>企業コード</strong></td>
+                        <td>会社から指定されたコード</td>
+                        <td><code>nlp-test</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>メールアドレス</strong></td>
+                        <td>あなたのメールアドレス</td>
+                        <td><code>driver1@nlp-test.com</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>パスワード</strong></td>
+                        <td>会社から指定されたパスワード</td>
+                        <td><code>Driver123!</code></td>
+                    </tr>
+                </table>
+                
+                <h3>3️⃣ ログインボタンをクリック</h3>
+                <p>入力が完了したら、<strong>「ログイン」</strong>ボタンをクリックしてください。</p>
+            </div>
+            
+            <!-- ヒヤリハット報告の入力 -->
+            <div class="section" id="report">
+                <h2>ヒヤリハット報告の入力</h2>
+                
+                <h3>ステップ1: 基本情報を入力</h3>
+                <p>ログイン後、以下の情報を入力してください：</p>
+                
+                <h4>📝 入力項目</h4>
+                <table>
+                    <tr>
+                        <th>項目</th>
+                        <th>説明</th>
+                        <th>入力例</th>
+                    </tr>
+                    <tr>
+                        <td><strong>報告者名</strong></td>
+                        <td>あなたの名前</td>
+                        <td>山田太郎</td>
+                    </tr>
+                    <tr>
+                        <td><strong>発生日</strong></td>
+                        <td>ヒヤリハットが起きた日</td>
+                        <td>2026-03-01</td>
+                    </tr>
+                    <tr>
+                        <td><strong>発生時刻</strong></td>
+                        <td>ヒヤリハットが起きた時間</td>
+                        <td>14:30</td>
+                    </tr>
+                    <tr>
+                        <td><strong>発生場所</strong></td>
+                        <td>具体的な場所</td>
+                        <td>東京都千代田区丸の内1-1-1</td>
+                    </tr>
+                </table>
+                
+                <h4>🗺️ GPS位置情報の取得（任意）</h4>
+                <div class="info-box">
+                    <p>💡 <strong>「現在地を取得」</strong>ボタンをクリックすると、自動で位置情報が入力されます</p>
+                    <p>💡 ブラウザが位置情報の許可を求めた場合は、<strong>「許可」</strong>をクリックしてください</p>
+                </div>
+                
+                <h3>ステップ2: 詳細情報を入力</h3>
+                <p><strong>「次へ」</strong>ボタンをクリックすると、詳細入力画面が表示されます。</p>
+                
+                <h4>📋 詳細項目</h4>
+                <table>
+                    <tr>
+                        <th>項目</th>
+                        <th>説明</th>
+                        <th>選択肢</th>
+                    </tr>
+                    <tr>
+                        <td><strong>カテゴリ</strong></td>
+                        <td>ヒヤリハットの種類</td>
+                        <td>運転操作ミス / 車両不具合 / 交通環境 / その他</td>
+                    </tr>
+                    <tr>
+                        <td><strong>詳細</strong></td>
+                        <td>具体的な状況を記入</td>
+                        <td>自由記述（できるだけ詳しく）</td>
+                    </tr>
+                </table>
+                
+                <h4>✍️ 詳細記入のポイント</h4>
+                <div class="success-box">
+                    <p><strong>良い例：</strong></p>
+                    <div class="code-block" style="background: white; color: #333; border: 2px solid #4CAF50;">
+信号待ちで停車中、後方から急接近する車両を発見。
+急ブレーキで回避したが、車間距離約2mまで接近された。
+時刻：14:30頃、場所：国道1号線、天候：晴れ
+                    </div>
+                </div>
+                
+                <div class="error-box">
+                    <p><strong>悪い例：</strong></p>
+                    <div class="code-block" style="background: white; color: #333; border: 2px solid #f44336;">
+危なかった
+                    </div>
+                </div>
+                
+                <h3>ステップ3: 報告を送信</h3>
+                <p>すべての入力が完了したら、<strong>「報告を送信」</strong>ボタンをクリックしてください。</p>
+                <div class="success-box">
+                    <p>✅ <strong>「報告が送信されました」</strong>というメッセージが表示されれば完了です！</p>
+                </div>
+            </div>
+            
+            <!-- 過去の報告を確認する -->
+            <div class="section" id="view">
+                <h2>過去の報告を確認する</h2>
+                
+                <h3>📊 ダッシュボードを開く</h3>
+                <p>ログイン後、画面上部のナビゲーションから <strong>「ダッシュボード」</strong>をクリックします。</p>
+                
+                <h3>報告一覧の見方</h3>
+                <table>
+                    <tr>
+                        <th>列名</th>
+                        <th>説明</th>
+                    </tr>
+                    <tr>
+                        <td><strong>報告者</strong></td>
+                        <td>報告した人の名前</td>
+                    </tr>
+                    <tr>
+                        <td><strong>発生日時</strong></td>
+                        <td>ヒヤリハットが起きた日時</td>
+                    </tr>
+                    <tr>
+                        <td><strong>場所</strong></td>
+                        <td>発生場所</td>
+                    </tr>
+                    <tr>
+                        <td><strong>カテゴリ</strong></td>
+                        <td>ヒヤリハットの種類</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ステータス</strong></td>
+                        <td>対応状況（未確認 / 確認済み / 対応中 / 完了）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>操作</strong></td>
+                        <td>詳細表示・修正依頼</td>
+                    </tr>
+                </table>
+                
+                <h3>🔍 報告の詳細を見る</h3>
+                <p>各報告の右側にある <strong>「詳細」</strong>ボタンをクリックすると、報告の全内容が表示されます。</p>
+            </div>
+            
+            <!-- 報告内容の修正を依頼する -->
+            <div class="section" id="edit-request">
+                <h2>報告内容の修正を依頼する</h2>
+                
+                <h3>修正が必要な場合</h3>
+                <p>報告内容に誤りがあった場合や、追加情報を記載したい場合は、修正依頼を送信できます。</p>
+                
+                <h3>修正依頼の手順</h3>
+                <ol>
+                    <li><strong>ダッシュボード</strong>から修正したい報告の <strong>「詳細」</strong>をクリック</li>
+                    <li>画面下部の <strong>「修正依頼」</strong>セクションを見つける</li>
+                    <li>修正内容を入力
+                        <div class="code-block" style="background: white; color: #333; border: 2px solid #2196F3; margin-top: 10px;">
+例：「発生時刻を14:30から15:00に修正してください」
+                        </div>
+                    </li>
+                    <li><strong>「📤 修正依頼を送信」</strong>ボタンをクリック</li>
+                </ol>
+                
+                <div class="success-box">
+                    <p>✅ 企業管理者に修正依頼が通知されます</p>
+                    <p>✅ 管理者が修正を完了すると、報告内容が更新されます</p>
+                </div>
+            </div>
+            
+            <!-- FAQ -->
+            <div class="section" id="faq">
+                <h2>よくある質問（FAQ）</h2>
+                
+                <h3>Q1: ログインできません</h3>
+                <div class="warning-box">
+                    <p><strong>A:</strong> 以下を確認してください：</p>
+                    <ol>
+                        <li><strong>企業コードが正しいか</strong>
+                            <ul>
+                                <li>会社から指定されたコードを入力していますか？</li>
+                                <li>大文字・小文字は区別されます</li>
+                            </ul>
+                        </li>
+                        <li><strong>メールアドレスが正しいか</strong>
+                            <ul>
+                                <li>スペースや誤字がないか確認してください</li>
+                            </ul>
+                        </li>
+                        <li><strong>パスワードが正しいか</strong>
+                            <ul>
+                                <li>パスワードは大文字・小文字を区別します</li>
+                                <li>コピー＆ペーストする場合は、余分なスペースに注意</li>
+                            </ul>
+                        </li>
+                        <li><strong>ブラウザのキャッシュをクリア</strong>
+                            <ul>
+                                <li><code>Ctrl + Shift + Del</code> でキャッシュを削除してください</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+                
+                <h3>Q2: GPS位置情報が取得できません</h3>
+                <div class="warning-box">
+                    <p><strong>A:</strong> 以下を確認してください：</p>
+                    <ol>
+                        <li><strong>ブラウザの位置情報許可</strong>
+                            <ul>
+                                <li>ブラウザの設定で位置情報の使用を許可してください</li>
+                            </ul>
+                        </li>
+                        <li><strong>デバイスのGPS機能</strong>
+                            <ul>
+                                <li>スマートフォンの場合、GPS機能がオンになっているか確認</li>
+                            </ul>
+                        </li>
+                        <li><strong>手動入力も可能</strong>
+                            <ul>
+                                <li>GPS取得ができなくても、住所を手動で入力できます</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+                
+                <h3>Q3: 報告を送信した後に間違いに気づきました</h3>
+                <div class="info-box">
+                    <p><strong>A:</strong> 修正依頼を送信してください：</p>
+                    <ol>
+                        <li>ダッシュボードから該当報告を開く</li>
+                        <li>「修正依頼」セクションに修正内容を記入</li>
+                        <li>送信ボタンをクリック</li>
+                    </ol>
+                    <p>企業管理者が確認して修正します。</p>
+                </div>
+                
+                <h3>Q4: パスワードを忘れました</h3>
+                <div class="warning-box">
+                    <p><strong>A:</strong> 企業管理者に連絡してください：</p>
+                    <ul>
+                        <li>企業管理者がパスワードをリセットします</li>
+                        <li>新しいパスワードが通知されます</li>
+                    </ul>
+                </div>
+                
+                <h3>Q5: スマートフォンで使えますか？</h3>
+                <div class="success-box">
+                    <p><strong>A:</strong> はい、使えます！</p>
+                    <ul>
+                        <li>iPhoneでもAndroidでも利用可能</li>
+                        <li>SafariやChromeなどのブラウザで開いてください</li>
+                    </ul>
+                </div>
+                
+                <h3>Q6: 写真は添付できますか？</h3>
+                <div class="warning-box">
+                    <p><strong>A:</strong> 現在のバージョンでは写真添付機能はありません</p>
+                    <ul>
+                        <li>詳細欄にできるだけ詳しく状況を記述してください</li>
+                        <li>必要な場合は、管理者に直接写真を送付してください</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 困ったときは -->
+            <div class="section" id="support">
+                <h2>困ったときは</h2>
+                
+                <h3>🆘 サポート連絡先</h3>
+                <table>
+                    <tr>
+                        <th>問い合わせ内容</th>
+                        <th>連絡先</th>
+                    </tr>
+                    <tr>
+                        <td><strong>ログインできない</strong></td>
+                        <td>企業管理者</td>
+                    </tr>
+                    <tr>
+                        <td><strong>操作方法がわからない</strong></td>
+                        <td>企業管理者</td>
+                    </tr>
+                    <tr>
+                        <td><strong>システムエラー</strong></td>
+                        <td>システム管理者: akari-imai@tehara.co.jp</td>
+                    </tr>
+                </table>
+                
+                <h3>📞 企業管理者の連絡先</h3>
+                <p>あなたの会社の企業管理者に確認してください。</p>
+                
+                <h3>💡 トラブルシューティング</h3>
+                
+                <h4>ログインできない場合</h4>
+                <ol>
+                    <li>ブラウザのキャッシュをクリア（<code>Ctrl + Shift + Del</code>）</li>
+                    <li>シークレットモードで試す（<code>Ctrl + Shift + N</code>）</li>
+                    <li>別のブラウザで試す</li>
+                    <li>企業管理者に連絡</li>
+                </ol>
+                
+                <h4>画面が正しく表示されない場合</h4>
+                <ol>
+                    <li>ブラウザを最新版に更新</li>
+                    <li>ページをリロード（<code>F5</code>または<code>Ctrl + R</code>）</li>
+                    <li>ハードリフレッシュ（<code>Ctrl + Shift + R</code>）</li>
+                </ol>
+                
+                <h4>報告が送信できない場合</h4>
+                <ol>
+                    <li>インターネット接続を確認</li>
+                    <li>必須項目がすべて入力されているか確認</li>
+                    <li>ブラウザのコンソール（<code>F12</code>）でエラーを確認</li>
+                    <li>システム管理者に連絡</li>
+                </ol>
+            </div>
+            
+            <!-- チェックリスト -->
+            <div class="section">
+                <h2>📌 チェックリスト</h2>
+                <p>報告前に以下を確認してください：</p>
+                <ul class="checklist">
+                    <li>報告者名を入力した</li>
+                    <li>発生日時を正確に入力した</li>
+                    <li>発生場所を具体的に記入した</li>
+                    <li>カテゴリを選択した</li>
+                    <li>詳細を記述した（できるだけ詳しく）</li>
+                    <li>内容を確認した</li>
+                    <li>送信ボタンをクリックした</li>
+                </ul>
+            </div>
+            
+            <!-- まとめ -->
+            <div class="section">
+                <h2>🎯 まとめ</h2>
+                <div class="success-box">
+                    <p>このマニュアルで以下のことができるようになりました：</p>
+                    <p>✅ ログイン方法</p>
+                    <p>✅ ヒヤリハット報告の入力</p>
+                    <p>✅ 過去の報告の確認</p>
+                    <p>✅ 修正依頼の送信</p>
+                    <p style="margin-top: 20px; font-weight: 600;">安全運転のために、ヒヤリハット報告を積極的に活用しましょう！</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>お問い合わせ</strong>: システム管理者 akari-imai@tehara.co.jp</p>
+            <p><strong>システム名</strong>: ヒヤリハット報告システム</p>
+            <p><strong>バージョン</strong>: 1.0 | <strong>作成日</strong>: 2026年3月1日</p>
+        </div>
+    </div>
+    
+    <a href="#" class="print-button" onclick="window.print(); return false;" title="印刷">🖨️</a>
+    
+    <script>
+        // スムーズスクロール
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
