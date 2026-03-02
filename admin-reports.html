@@ -103,6 +103,14 @@
             if (adminUserInfo) {
                 adminUserInfo.style.display = 'flex';
             }
+            
+            // システム管理者のみ「企業管理」リンクを表示
+            if (window.currentUserRole === 'admin') {
+                const adminLink = document.getElementById('admin-link');
+                if (adminLink) {
+                    adminLink.style.display = 'inline-block';
+                }
+            }
         }
         
         async function adminLogout() {
@@ -132,7 +140,7 @@
                     <a href="index.html">報告入力</a>
                     <a href="dashboard.html">ダッシュボード</a>
                     <a href="analytics.html">分析</a>
-                    <a href="admin.html">企業管理</a>
+                    <a href="admin.html" id="admin-link" style="display: none;">企業管理</a>
                     <a href="admin-reports.html" class="active">報告管理</a>
                     <a href="admin-users.html">ユーザー管理</a>
                 </div>
