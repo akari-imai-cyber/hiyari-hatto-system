@@ -152,6 +152,17 @@
                         </button>
                     </div>
 
+                    <!-- 車両種別 -->
+                    <div class="form-group">
+                        <label for="vehicle-type" class="required">車両種別</label>
+                        <select id="vehicle-type" name="vehicle_type" class="form-control" required>
+                            <option value="">選択してください</option>
+                            <option value="トラック">トラック</option>
+                            <option value="フォークリフト">フォークリフト</option>
+                        </select>
+                        <small class="form-text">使用していた車両の種別を選択してください</small>
+                    </div>
+
                     <!-- 荷物の種類 -->
                     <div class="form-group">
                         <label for="cargo-type" class="required">荷物の種類</label>
@@ -168,6 +179,14 @@
                             <option value="その他">その他</option>
                         </select>
                         <small class="form-text">運搬していた荷物の種類を選択してください</small>
+                    </div>
+
+                    <!-- 荷物情報（任意） -->
+                    <div class="form-group">
+                        <label for="cargo-info">荷物情報（任意）</label>
+                        <input type="text" id="cargo-info" name="cargo_info" class="form-control" 
+                               placeholder="例: 冷凍マグロ 500kg、パレット10枚">
+                        <small class="form-text">荷物の詳細情報があれば入力してください（任意）</small>
                     </div>
 
                     <!-- 事象カテゴリ（分岐ポイント） -->
