@@ -389,10 +389,19 @@ async function collectFormData() {
         throw error; // エラーを上位に伝播
     }
     
+    // 報告者名を取得（空の場合はメールアドレスまたはデフォルト値を使用）
+    let reporterName = document.getElementById('employee').value.trim();
+    if (!reporterName) {
+        // セッションからメールアドレスを取得
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        reporterName = session?.user?.email || '未入力';
+        console.log('⚠️ 報告者名が未入力のためデフォルト値を使用:', reporterName);
+    }
+    
     reportData = {
         company_id: companyId,  // 企業IDを追加
         report_type: reportType,
-        reporter_name: document.getElementById('employee').value,
+        reporter_name: reporterName,  // デフォルト値対応
         occurred_at: document.getElementById('occurred-at').value,
         location_text: document.getElementById('location').value,
         area_detail: document.getElementById('area-detail')?.value || null,  // エリア詳細を追加
