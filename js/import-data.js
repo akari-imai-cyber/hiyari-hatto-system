@@ -433,39 +433,67 @@ async function importData() {
     let errorCount = 0;
     const errors = [];
     
+    console.log(`=== 一括インポート開始: ${excelData.length} 件 ===`);
+    
+    // 全データを変換
+    const allIncidents = [];
+    
+    progressFill.textContent = 'データ変換中...';
+    
     for (let i = 0; i < excelData.length; i++) {
         const row = excelData[i];
         
         try {
             // データ変換
             const incident = convertToIncident(row, mapping, auth);
+            allIncidents.push(incident);
+        } catch (error) {
+            console.error(`行 ${i + 1} の変換エラー:`, error);
+            errors.push({ row: i + 1, error: error.message });
+            errorCount++;
+        }
+        
+        // 進行状況更新（変換フェーズ: 0〜50%）
+        const progress = Math.round((i + 1) / excelData.length * 50);
+        progressFill.style.width = progress + '%';
+        progressFill.textContent = `変換中... ${progress}%`;
+    }
+    
+    console.log(`✅ データ変換完了: ${allIncidents.length} 件`);
+    
+    // 一括登録
+    if (allIncidents.length > 0) {
+        try {
+            progressFill.style.width = '50%';
+            progressFill.textContent = 'データベースに登録中...';
             
-            // Supabase に登録
+            console.log('Supabase に一括登録開始...');
+            
             const { data, error } = await window.supabaseClient
                 .from('incidents')
-                .insert([incident])
+                .insert(allIncidents)
                 .select();
             
             if (error) {
                 throw error;
             }
             
-            successCount++;
+            successCount = allIncidents.length;
+            console.log(`✅ 一括登録成功: ${successCount} 件`);
+            
+            // 進行状況更新（登録完了: 100%）
+            progressFill.style.width = '100%';
+            progressFill.textContent = '100%';
             
         } catch (error) {
-            console.error(`行 ${i + 1} のインポートエラー:`, error);
-            errorCount++;
-            errors.push({ row: i + 1, error: error.message });
-        }
-        
-        // 進行状況更新
-        const progress = Math.round(((i + 1) / excelData.length) * 100);
-        progressFill.style.width = progress + '%';
-        progressFill.textContent = progress + '%';
-        
-        // 少し待つ（API制限回避）
-        if (i % 10 === 0) {
-            await new Promise(resolve => setTimeout(resolve, 100));
+            console.error('❌ 一括登録エラー:', error);
+            console.log('エラー詳細:', error.message);
+            
+            // 一括登録が失敗した場合のメッセージ
+            alert(`一括登録に失敗しました。\n\nエラー: ${error.message}\n\n10件ずつに分けて再試行することをお勧めします。`);
+            
+            errorCount = allIncidents.length;
+            errors.push({ row: 'すべて', error: error.message });
         }
     }
     
@@ -483,7 +511,8 @@ async function importData() {
             <details style="margin-top: 10px;">
                 <summary>エラー詳細</summary>
                 <ul style="margin-top: 10px;">
-                    ${errors.slice(0, 10).map(e => `<li>行 ${e.row}: ${e.error}</li>`).join('')}
+                    ${errors.slice(0, 20).map(e => `<li>行 ${e.row}: ${e.error}</li>`).join('')}
+                    ${errors.length > 20 ? `<li>...他 ${errors.length - 20} 件</li>` : ''}
                 </ul>
             </details>
         ` : ''}
