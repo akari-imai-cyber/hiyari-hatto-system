@@ -155,6 +155,14 @@
                         <input type="hidden" id="gps-lng" name="location_lng">
                     </div>
 
+                    <!-- エリア詳細 -->
+                    <div class="form-group">
+                        <label for="area-detail">エリア詳細（任意）</label>
+                        <input type="text" id="area-detail" name="area_detail" class="form-control" 
+                               placeholder="例: 2F倉庫エリア、構内北側">
+                        <small class="form-text">詳細な場所を入力してください（任意）</small>
+                    </div>
+
                     <!-- 車両種別 -->
                     <div class="form-group">
                         <label for="vehicle-type" class="required">車両種別</label>
@@ -162,8 +170,18 @@
                             <option value="">選択してください</option>
                             <option value="トラック">トラック</option>
                             <option value="フォークリフト">フォークリフト</option>
+                            <option value="営業車">営業車</option>
+                            <option value="その他">その他</option>
                         </select>
                         <small class="form-text">使用していた車両の種別を選択してください</small>
+                    </div>
+
+                    <!-- 車両詳細 -->
+                    <div class="form-group">
+                        <label for="vehicle-detail">車両詳細（任意）</label>
+                        <input type="text" id="vehicle-detail" name="vehicle_detail" class="form-control" 
+                               placeholder="例: 車番1234、3号車">
+                        <small class="form-text">車番や車両番号などを入力してください（任意）</small>
                     </div>
 
                     <!-- 荷物の種類 -->
@@ -560,6 +578,13 @@
                             <input type="text" id="order-id" name="order_id" class="form-control" 
                                    placeholder="例: ORD-20251219-0088">
                             <small class="form-text">配送中の場合は記入してください</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="accident-damage">事故損害（任意）</label>
+                            <textarea id="accident-damage" name="accident_damage" class="form-control" rows="3"
+                                      placeholder="例: バンパー左側に擦り傷、保険請求予定"></textarea>
+                            <small class="form-text">事故の損害箇所や保険請求情報を記入してください</small>
                         </div>
                     </div>
 
