@@ -29,6 +29,27 @@ const systemFields = [
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('インポートページ初期化');
     
+    // Supabaseクライアント初期化を待つ
+    if (typeof initializeApp === 'function') {
+        try {
+            await initializeApp();
+            console.log('✅ Supabase初期化完了');
+        } catch (error) {
+            console.error('❌ Supabase初期化エラー:', error);
+            alert('システムエラー: Supabaseの初期化に失敗しました。\n\nページをリロードしてください。');
+            return;
+        }
+    }
+    
+    // Supabaseクライアント確認
+    if (!window.supabaseClient) {
+        console.error('❌ Supabaseクライアントが見つかりません');
+        alert('システムエラー: データベース接続に失敗しました。\n\nページをリロードしてください。');
+        return;
+    }
+    
+    console.log('✅ Supabaseクライアント確認完了');
+    
     // 認証チェック
     const isAuthenticated = await checkAuthentication();
     if (!isAuthenticated) {
@@ -50,6 +71,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // ファイル選択イベント
     document.getElementById('file-input').addEventListener('change', handleFileSelect);
+    
+    console.log('✅ インポートページ初期化完了');
 });
 
 // ドラッグ&ドロップ設定
