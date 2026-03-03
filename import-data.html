@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>データインポート - ヒヤリハット報告システム</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .import-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 10px;
+            padding: 60px 40px;
+            text-align: center;
+            background: #f8f9fa;
+            margin-bottom: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-area:hover {
+            background: #e9ecef;
+            border-color: #2980b9;
+        }
+        
+        .upload-area.dragover {
+            background: #d4edff;
+            border-color: #0066cc;
+        }
+        
+        .upload-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .mapping-section {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .mapping-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .mapping-table th,
+        .mapping-table td {
+            padding: 12px;
+            border: 1px solid #dee2e6;
+            text-align: left;
+        }
+        
+        .mapping-table th {
+            background: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .mapping-table select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+        
+        .preview-section {
+            margin-top: 30px;
+        }
+        
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        .preview-table th,
+        .preview-table td {
+            padding: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .preview-table th {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .status-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1>📊 データインポート</h1>
+                <div class="user-info">
+                    <span id="user-display"></span>
+                    <button onclick="logout()" class="btn btn-secondary">ログアウト</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="import-container">
+            <!-- アップロードエリア -->
+            <div class="upload-area" id="upload-area">
+                <div class="upload-icon">📁</div>
+                <h3>Excelファイルをドラッグ&ドロップ</h3>
+                <p>または</p>
+                <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display: none;">
+                <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
+                    ファイルを選択
+                </button>
+                <p style="margin-top: 20px; color: #6c757d; font-size: 14px;">
+                    対応形式: Excel (.xlsx, .xls), CSV (.csv)
+                </p>
+            </div>
+
+            <!-- ファイル情報 -->
+            <div id="file-info" style="display: none; margin-bottom: 30px;">
+                <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db;">
+                    <h4 style="margin: 0 0 10px 0;">📄 選択されたファイル</h4>
+                    <p style="margin: 5px 0;"><strong>ファイル名:</strong> <span id="file-name"></span></p>
+                    <p style="margin: 5px 0;"><strong>データ件数:</strong> <span id="row-count"></span> 件</p>
+                    <p style="margin: 5px 0;"><strong>列数:</strong> <span id="column-count"></span> 列</p>
+                </div>
+            </div>
+
+            <!-- マッピング設定 -->
+            <div class="mapping-section" id="mapping-section">
+                <h3>🔄 列のマッピング設定</h3>
+                <p>Excelファイルの列を、システムのフィールドに対応させてください。</p>
+                
+                <table class="mapping-table" id="mapping-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">システムのフィールド</th>
+                            <th style="width: 30%;">Excelの列</th>
+                            <th style="width: 40%;">プレビュー</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mapping-tbody">
+                        <!-- JavaScript で動的に生成 -->
+                    </tbody>
+                </table>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="previewData()">
+                        👁️ プレビュー表示
+                    </button>
+                    <button class="btn btn-success" onclick="importData()">
+                        ✅ データをインポート
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetImport()">
+                        🔄 リセット
+                    </button>
+                </div>
+            </div>
+
+            <!-- プレビュー -->
+            <div class="preview-section" id="preview-section" style="display: none;">
+                <h3>👁️ データプレビュー（最初の10件）</h3>
+                <div style="overflow-x: auto;">
+                    <table class="preview-table" id="preview-table">
+                        <!-- JavaScript で動的に生成 -->
+                    </table>
+                </div>
+            </div>
+
+            <!-- 進行状況 -->
+            <div class="progress-bar" id="progress-bar">
+                <div class="progress-fill" id="progress-fill">0%</div>
+            </div>
+
+            <!-- ステータスメッセージ -->
+            <div class="status-message" id="status-message"></div>
+
+            <!-- 戻るボタン -->
+            <div style="margin-top: 40px;">
+                <a href="dashboard.html" class="btn btn-secondary">← ダッシュボードに戻る</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- SheetJS ライブラリ -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/auth-supabase.js"></script>
+    <script src="js/import-data.js"></script>
+</body>
+</html>
