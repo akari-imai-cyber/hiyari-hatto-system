@@ -398,6 +398,14 @@ async function collectFormData() {
         console.log('⚠️ 報告者名が未入力のためデフォルト値を使用:', reporterName);
     }
     
+    // incident_type の取得と検証
+    const incidentType = document.getElementById('incident-category').value;
+    if (!incidentType) {
+        console.error('❌ 事象カテゴリが選択されていません');
+        alert('「どちらで起きた？」を選択してください（走行中 または 荷役・作業中）');
+        throw new Error('incident_type が未選択');
+    }
+    
     reportData = {
         company_id: companyId,  // 企業IDを追加
         report_type: reportType,
@@ -409,7 +417,7 @@ async function collectFormData() {
         vehicle_detail: document.getElementById('vehicle-detail')?.value || null,  // 車両詳細を追加
         cargo_type: document.getElementById('cargo-type').value,  // 荷物の種類を追加
         cargo_info: document.getElementById('cargo-info')?.value || null,  // 荷物情報を追加
-        incident_type: document.getElementById('incident-category').value,
+        incident_type: incidentType,  // 検証済みの incident_type
         categories: selectedCategories,
         memo: document.getElementById('category-memo')?.value || '',
         photo_url: uploadedPhotoUrls.length > 0 ? uploadedPhotoUrls[0] : null,
