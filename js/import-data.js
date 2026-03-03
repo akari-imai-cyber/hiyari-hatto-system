@@ -130,11 +130,38 @@ async function handleFile(file) {
         
         headers = Object.keys(data[0]);
         
+        // デバッグ: 読み込まれた列名をコンソールに表示
+        console.log('===== 読み込まれた列名 =====');
+        headers.forEach((header, index) => {
+            console.log(`${index + 1}. ${header}`);
+        });
+        console.log('=========================');
+        
         // ファイル情報表示
         document.getElementById('file-name').textContent = fileName;
         document.getElementById('row-count').textContent = data.length;
         document.getElementById('column-count').textContent = headers.length;
         document.getElementById('file-info').style.display = 'block';
+        
+        // ヘッダー名も表示
+        const headerList = document.createElement('p');
+        headerList.innerHTML = '<strong>検出された列名:</strong><br>' + headers.map((h, i) => `${i + 1}. ${h}`).join('<br>');
+        headerList.style.fontSize = '12px';
+        headerList.style.color = '#6c757d';
+        headerList.style.marginTop = '10px';
+        headerList.style.maxHeight = '150px';
+        headerList.style.overflow = 'auto';
+        headerList.style.padding = '10px';
+        headerList.style.background = '#f8f9fa';
+        headerList.style.borderRadius = '4px';
+        const fileInfo = document.getElementById('file-info').querySelector('div');
+        // 既存の列名表示を削除
+        const existingHeaderList = fileInfo.querySelector('.header-list');
+        if (existingHeaderList) {
+            existingHeaderList.remove();
+        }
+        headerList.className = 'header-list';
+        fileInfo.appendChild(headerList);
         
         // マッピングテーブル生成
         generateMappingTable();
