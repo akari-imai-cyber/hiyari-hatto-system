@@ -218,7 +218,9 @@ function createReportCard(report) {
                 <div><strong>発生日時:</strong> ${occurredDate}</div>
                 <div><strong>報告者:</strong> ${employeeName}</div>
                 <div><strong>場所:</strong> ${report.location_text}</div>
+                ${report.area_detail ? `<div><strong>エリア詳細:</strong> ${report.area_detail}</div>` : ''}
                 <div><strong>車両種別:</strong> ${report.vehicle_type || '-'}</div>
+                ${report.vehicle_detail ? `<div><strong>車両詳細:</strong> ${report.vehicle_detail}</div>` : ''}
                 <div><strong>荷物の種類:</strong> ${report.cargo_type || '-'}</div>
                 ${report.cargo_info ? `<div><strong>荷物情報:</strong> ${report.cargo_info}</div>` : ''}
                 <div><strong>カテゴリ:</strong> ${categoryText}</div>
@@ -373,10 +375,22 @@ function createDetailContent(report) {
                 <div class="detail-label">発生場所</div>
                 <div class="detail-value">${report.location_text}</div>
             </div>
+            ${report.area_detail ? `
+            <div class="detail-row">
+                <div class="detail-label">エリア詳細</div>
+                <div class="detail-value">${report.area_detail}</div>
+            </div>
+            ` : ''}
             <div class="detail-row">
                 <div class="detail-label">車両種別</div>
                 <div class="detail-value">${report.vehicle_type || '-'}</div>
             </div>
+            ${report.vehicle_detail ? `
+            <div class="detail-row">
+                <div class="detail-label">車両詳細</div>
+                <div class="detail-value">${report.vehicle_detail}</div>
+            </div>
+            ` : ''}
             <div class="detail-row">
                 <div class="detail-label">荷物の種類</div>
                 <div class="detail-value">${report.cargo_type || '-'}</div>
@@ -385,6 +399,12 @@ function createDetailContent(report) {
             <div class="detail-row">
                 <div class="detail-label">荷物情報</div>
                 <div class="detail-value">${report.cargo_info}</div>
+            </div>
+            ` : ''}
+            ${report.accident_damage ? `
+            <div class="detail-row">
+                <div class="detail-label">事故損害</div>
+                <div class="detail-value">${report.accident_damage}</div>
             </div>
             ` : ''}
             <div class="detail-row">
@@ -648,9 +668,11 @@ function exportToCSV() {
         '発生場所（テキスト）',
         'GPS緯度',
         'GPS経度',
-        '車両種別',  // ← 追加
+        'エリア詳細',  // ← 追加
+        '車両種別',
+        '車両詳細',  // ← 追加
         '荷物の種類',
-        '荷物情報',  // ← 追加
+        '荷物情報',
         '事象カテゴリ',
         '何が起きたか（カテゴリ）',
         'カテゴリ補足メモ',
@@ -679,6 +701,7 @@ function exportToCSV() {
         '再発防止策',
         '重大度',
         '受注ID',
+        '事故損害',  // ← 追加
         // 管理者対応
         '管理者コメント',
         'ステータス',
@@ -699,9 +722,11 @@ function exportToCSV() {
         report.location_text || report.location || '',
         report.location_lat || report.location_gps_lat || '',
         report.location_lng || report.location_gps_lng || '',
-        report.vehicle_type || '',  // ← 追加
+        report.area_detail || '',  // ← 追加
+        report.vehicle_type || '',
+        report.vehicle_detail || '',  // ← 追加
         report.cargo_type || '',
-        report.cargo_info || '',  // ← 追加
+        report.cargo_info || '',
         report.incident_type || report.incident_category || '',
         Array.isArray(report.categories) ? report.categories.join('; ') : (report.what_happened_category || ''),
         report.memo || report.category_memo || '',
@@ -731,6 +756,7 @@ function exportToCSV() {
         report.prevention_proposal || '',
         report.severity_rating || '',
         report.order_id || '',
+        report.accident_damage || '',  // ← 追加
         // 管理者対応
         report.manager_comment || '',
         getStatusLabel(report.status),

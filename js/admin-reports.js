@@ -166,13 +166,16 @@ function displayReports(reports) {
                     <div class="report-info">
                         <strong>場所:</strong> ${report.location_text || '-'}
                     </div>
+                    ${report.area_detail ? `<div class="report-info"><strong>エリア詳細:</strong> ${report.area_detail}</div>` : ''}
                     <div class="report-info">
                         <strong>車両種別:</strong> ${report.vehicle_type || '-'}
                     </div>
+                    ${report.vehicle_detail ? `<div class="report-info"><strong>車両詳細:</strong> ${report.vehicle_detail}</div>` : ''}
                     <div class="report-info">
                         <strong>荷物の種類:</strong> ${report.cargo_type || '-'}
                     </div>
                     ${report.cargo_info ? `<div class="report-info"><strong>荷物情報:</strong> ${report.cargo_info}</div>` : ''}
+                    ${report.accident_damage ? `<div class="report-info"><strong>事故損害:</strong> ${report.accident_damage}</div>` : ''}
                     <div class="report-memo">
                         ${report.memo || '（メモなし）'}
                     </div>
@@ -256,12 +259,26 @@ function createEditForm(report) {
             </div>
             
             <div class="form-group">
+                <label>エリア詳細（任意）</label>
+                <input type="text" id="edit-area-detail" class="form-control" 
+                       value="${report.area_detail || ''}" placeholder="例: 2F倉庫エリア">
+            </div>
+            
+            <div class="form-group">
                 <label>車両種別</label>
                 <select id="edit-vehicle-type" class="form-control">
                     <option value="">未選択</option>
                     <option value="トラック" ${report.vehicle_type === 'トラック' ? 'selected' : ''}>トラック</option>
                     <option value="フォークリフト" ${report.vehicle_type === 'フォークリフト' ? 'selected' : ''}>フォークリフト</option>
+                    <option value="営業車" ${report.vehicle_type === '営業車' ? 'selected' : ''}>営業車</option>
+                    <option value="その他" ${report.vehicle_type === 'その他' ? 'selected' : ''}>その他</option>
                 </select>
+            </div>
+            
+            <div class="form-group">
+                <label>車両詳細（任意）</label>
+                <input type="text" id="edit-vehicle-detail" class="form-control" 
+                       value="${report.vehicle_detail || ''}" placeholder="例: 車番1234">
             </div>
             
             <div class="form-group">
@@ -284,6 +301,12 @@ function createEditForm(report) {
                 <label>荷物情報（任意）</label>
                 <input type="text" id="edit-cargo-info" class="form-control" 
                        value="${report.cargo_info || ''}" placeholder="例: 冷凍マグロ 500kg">
+            </div>
+            
+            <div class="form-group">
+                <label>事故損害（任意）</label>
+                <textarea id="edit-accident-damage" class="form-control" rows="3"
+                          placeholder="例: バンパー左側に擦り傷">${report.accident_damage || ''}</textarea>
             </div>
             
             <div class="form-group">
@@ -367,9 +390,12 @@ async function saveReport() {
             reporter_name: document.getElementById('edit-reporter-name').value,
             occurred_at: document.getElementById('edit-occurred-at').value,
             location_text: document.getElementById('edit-location').value,
-            vehicle_type: document.getElementById('edit-vehicle-type').value,  // ← 追加
+            area_detail: document.getElementById('edit-area-detail')?.value || null,  // ← 追加
+            vehicle_type: document.getElementById('edit-vehicle-type').value,
+            vehicle_detail: document.getElementById('edit-vehicle-detail')?.value || null,  // ← 追加
             cargo_type: document.getElementById('edit-cargo-type').value,
-            cargo_info: document.getElementById('edit-cargo-info').value,  // ← 追加
+            cargo_info: document.getElementById('edit-cargo-info')?.value || null,
+            accident_damage: document.getElementById('edit-accident-damage')?.value || null,  // ← 追加
             report_type: document.getElementById('edit-report-type').value,
             incident_type: document.getElementById('edit-incident-type').value,
             memo: document.getElementById('edit-memo').value,

@@ -395,9 +395,11 @@ async function collectFormData() {
         reporter_name: document.getElementById('employee').value,
         occurred_at: document.getElementById('occurred-at').value,
         location_text: document.getElementById('location').value,
+        area_detail: document.getElementById('area-detail')?.value || null,  // エリア詳細を追加
         vehicle_type: document.getElementById('vehicle-type').value,  // 車両種別を追加
+        vehicle_detail: document.getElementById('vehicle-detail')?.value || null,  // 車両詳細を追加
         cargo_type: document.getElementById('cargo-type').value,  // 荷物の種類を追加
-        cargo_info: document.getElementById('cargo-info').value,  // 荷物情報を追加
+        cargo_info: document.getElementById('cargo-info')?.value || null,  // 荷物情報を追加
         incident_type: document.getElementById('incident-category').value,
         categories: selectedCategories,
         memo: document.getElementById('category-memo')?.value || '',
@@ -463,6 +465,7 @@ function collectStep2Data() {
     reportData.severity = severity ? parseInt(severity.value) : null;
     
     reportData.order_id = document.getElementById('order-id')?.value || null;
+    reportData.accident_damage = document.getElementById('accident-damage')?.value || null;  // 事故損害を追加
     
     // ステータス更新
     reportData.status = 'step2_complete';
