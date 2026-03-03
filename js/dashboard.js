@@ -357,16 +357,9 @@ function createDetailContent(report) {
             <h3>報告者情報</h3>
             <div class="detail-row">
                 <div class="detail-label">氏名</div>
-                <div class="detail-value">${report.employees?.name || '-'}</div>
+                <div class="detail-value">${report.reporter_name || report.employee_name || '-'}</div>
             </div>
-            <div class="detail-row">
-                <div class="detail-label">従業員コード</div>
-                <div class="detail-value">${report.employees?.employee_code || '-'}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">所属</div>
-                <div class="detail-value">${report.employees?.office || '-'}</div>
-            </div>
+        </div>
         </div>
 
         <div class="detail-section">
