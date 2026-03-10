@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理者ダッシュボード - ヒヤリハット報告システム</title>
+    <title>管理者ダッシュボード - ヒヤリハットナビ</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -45,6 +45,7 @@
         const adminReportsLink = document.getElementById('admin-reports-link');
         const adminUsersLink = document.getElementById('admin-users-link');
         const importDataLink = document.getElementById('import-data-link');
+        const dataFixLink = document.getElementById('data-fix-link');
         
         if (auth && auth.authenticated) {
             displayCompany.textContent = auth.companyName || auth.companyCode || '企業名不明';
@@ -62,12 +63,13 @@
                 }
             }
             
-            // 企業管理者 または システム管理者の場合は「報告管理」「ユーザー管理」「データインポート」リンクを表示
+            // 企業管理者 または システム管理者の場合は「報告管理」「ユーザー管理」「データインポート」「データ修正」リンクを表示
             if (auth.role === 'company_admin' || auth.role === 'admin') {
                 console.log('✅ 管理者リンク表示');
                 if (adminReportsLink) adminReportsLink.style.display = 'inline-block';
                 if (adminUsersLink) adminUsersLink.style.display = 'inline-block';
                 if (importDataLink) importDataLink.style.display = 'inline-block';
+                if (dataFixLink) dataFixLink.style.display = 'inline-block';
             } else {
                 console.log('❌ 一般ユーザー - 管理者リンク非表示');
             }
@@ -102,6 +104,7 @@
                         <a href="admin-reports.html" class="nav-link" id="admin-reports-link" style="display: none;">報告管理</a>
                         <a href="admin-users.html" class="nav-link" id="admin-users-link" style="display: none;">ユーザー管理</a>
                         <a href="import-data.html" class="nav-link" id="import-data-link" style="display: none;">📥 データインポート</a>
+                        <a href="admin-data-fix.html" class="nav-link" id="data-fix-link" style="display: none;">🔧 データ修正</a>
                     </nav>
                 </div>
             </div>
@@ -172,7 +175,7 @@
         </main>
 
         <footer class="footer">
-            <p>&copy; 2025 NLP ヒヤリハット報告システム</p>
+            <p>&copy; 2026 NLP協同組合</p>
         </footer>
     </div>
 
