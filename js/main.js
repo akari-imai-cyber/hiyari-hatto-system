@@ -232,7 +232,7 @@ async function submitStep1() {
     }
     
     // フォームデータ収集
-    collectFormData();
+    await collectFormData();
     
     // データベースに保存
     try {
