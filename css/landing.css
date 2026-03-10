@@ -73,10 +73,23 @@ body {
     color: var(--white);
     text-decoration: none;
     transition: opacity 0.3s;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .header-nav a:hover {
     opacity: 0.8;
+}
+
+/* プライマリボタンは白背景+青文字 */
+.header-nav .btn-primary {
+    color: #2563eb !important;
+    text-shadow: none;
+}
+
+.header-nav .btn-primary:hover {
+    opacity: 1;
+    color: #1e40af !important;
 }
 
 .btn-login {
@@ -88,9 +101,19 @@ body {
 .btn-primary {
     padding: 10px 24px;
     background: var(--white);
-    color: var(--primary-color);
+    color: #2563eb !important;
     border-radius: 8px;
     font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    display: inline-block;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    color: #1e40af !important;
 }
 
 /* ヒーローセクション */
@@ -354,6 +377,315 @@ section {
 }
 
 /* 導入事例セクション */
+/* デモセクション */
+.demo-section {
+    background: var(--light);
+}
+
+.demo-content {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.demo-card {
+    background: var(--white);
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    margin-bottom: 3rem;
+}
+
+.demo-account {
+    text-align: center;
+}
+
+.demo-card-title {
+    font-size: 1.8rem;
+    margin-bottom: 2rem;
+    color: var(--primary-color);
+}
+
+.demo-credentials {
+    background: #f3f4f6;
+    padding: 2rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.credential-item {
+    margin-bottom: 1.5rem;
+}
+
+.credential-item:last-child {
+    margin-bottom: 0;
+}
+
+.credential-label {
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.credential-value {
+    background: var(--white);
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    display: inline-block;
+    font-size: 1.2rem;
+    font-family: 'Courier New', monospace;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.demo-features h4 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: var(--dark);
+}
+
+.demo-features ul {
+    list-style: none;
+    padding: 0;
+}
+
+.demo-features li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 1.05rem;
+}
+
+.demo-features li:last-child {
+    border-bottom: none;
+}
+
+.btn-demo-login {
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    padding: 1.2rem;
+    background: var(--primary-color);
+    color: var(--white);
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    transition: background 0.3s, transform 0.2s;
+    margin-top: 1rem;
+}
+
+.btn-demo-login:hover {
+    background: var(--secondary-color);
+    transform: translateY(-2px);
+}
+
+/* 画面紹介グリッド */
+.demo-screen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.screen-card {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.screen-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+}
+
+.screen-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.screen-card h4 {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    color: var(--dark);
+}
+
+.screen-card p {
+    color: #6b7280;
+    margin-bottom: 1.5rem;
+    line-height: 1.7;
+}
+
+.screen-features {
+    list-style: none;
+    padding: 0;
+}
+
+.screen-features li {
+    padding: 0.5rem 0;
+    color: #4b5563;
+    font-size: 0.95rem;
+}
+
+.screen-features li::before {
+    content: '✓ ';
+    color: var(--success-color);
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+
+/* 実際の画面セクション */
+.screens-section {
+    background: var(--light);
+    padding: 80px 0;
+}
+
+.screens-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.screen-showcase {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 80px;
+    align-items: center;
+}
+
+.screen-showcase.reverse {
+    direction: rtl;
+}
+
+.screen-showcase.reverse > * {
+    direction: ltr;
+}
+
+.screen-info {
+    padding: 20px;
+}
+
+.screen-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.screen-info h3 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: var(--dark);
+}
+
+.screen-info p {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: #4b5563;
+    margin-bottom: 1.5rem;
+}
+
+.screen-features {
+    list-style: none;
+    padding: 0;
+}
+
+.screen-features li {
+    padding: 0.5rem 0;
+    color: #4b5563;
+    font-size: 1rem;
+}
+
+.screen-features li::before {
+    content: '✓ ';
+    color: var(--success-color);
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+
+.screen-preview {
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+.screen-preview img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.screen-placeholder {
+    aspect-ratio: 16 / 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    padding: 40px;
+    text-align: center;
+}
+
+.screen-placeholder p {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 10px;
+}
+
+.screen-placeholder small {
+    font-size: 1rem;
+    color: #6b7280;
+}
+
+/* レスポンシブ */
+@media (max-width: 768px) {
+    .screen-showcase {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .screen-showcase.reverse {
+        direction: ltr;
+    }
+}
+
+/* チェックボックスラベル */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+    color: #ffffff;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.checkbox-label a {
+    color: #f97316;
+    text-decoration: underline;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.checkbox-label a:hover {
+    color: #ea580c;
+}
+
+/* レスポンシブ: 小画面では改行を許可 */
+@media (max-width: 768px) {
+    .checkbox-label {
+        white-space: normal;
+    }
+}
+
 .testimonials {
     background: var(--light);
 }
@@ -479,6 +811,12 @@ section {
     grid-template-columns: 1fr 1fr;
     gap: 20px;
     margin-bottom: 20px;
+}
+
+/* チェックボックス行は1カラム */
+.form-row:has(.checkbox-label) {
+    grid-template-columns: 1fr;
+    justify-items: center;
 }
 
 .register-form input,
