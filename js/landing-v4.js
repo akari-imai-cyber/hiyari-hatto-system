@@ -96,8 +96,15 @@ document.getElementById('register-form')?.addEventListener('submit', async (e) =
         console.log('📝 登録情報:', { companyName, email, phone });
         console.log('🔐 生成されたパスワード:', generatedPassword);
         
-        // Supabase Auth で新規ユーザー登録
-        const { data: authData, error: authError } = await window.supabase.auth.signUp({
+       // Supabase Auth で新規ユーザー登録
+const supabaseClient = window.supabaseClient || window.supabase;
+
+if (!supabaseClient || !supabaseClient.auth) {
+    throw new Error('Supabase client not properly initialized');
+}
+
+const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+
             email: email,
             password: generatedPassword,
             options: {
