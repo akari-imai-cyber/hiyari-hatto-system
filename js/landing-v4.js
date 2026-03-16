@@ -6,14 +6,14 @@
 // DOMContentLoaded後に初期化
 document.addEventListener('DOMContentLoaded', () => {
     // Supabase初期化
-    if (typeof initializeApp === 'function') {
-        initializeApp();
-    }
-    
-    if (!window.supabase) {
-        console.error('❌ Supabase client not initialized');
-    } else {
+    if (!window.supabase && typeof SUPABASE_CONFIG !== 'undefined') {
+        const { createClient } = supabase;
+        window.supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
         console.log('✅ Supabase client initialized for landing page');
+    } else if (window.supabase) {
+        console.log('✅ Supabase client already initialized');
+    } else {
+        console.error('❌ Supabase client not initialized - SUPABASE_CONFIG missing');
     }
 });
 
