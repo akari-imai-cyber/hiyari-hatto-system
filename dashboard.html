@@ -63,10 +63,15 @@
                 }
             }
             
-            // 企業管理者 または システム管理者の場合は「報告管理」「ユーザー管理」「データインポート」「データ修正」リンクを表示
+            // システム管理者のみ「報告管理」リンクを表示
+            if (auth.role === 'admin') {
+                console.log('✅ システム管理者: 報告管理リンク表示');
+                if (adminReportsLink) adminReportsLink.style.display = 'inline-block';
+            }
+            
+            // 企業管理者 または システム管理者の場合は「ユーザー管理」「データインポート」「データ修正」リンクを表示
             if (auth.role === 'company_admin' || auth.role === 'admin') {
                 console.log('✅ 管理者リンク表示');
-                if (adminReportsLink) adminReportsLink.style.display = 'inline-block';
                 if (adminUsersLink) adminUsersLink.style.display = 'inline-block';
                 if (importDataLink) importDataLink.style.display = 'inline-block';
                 if (dataFixLink) dataFixLink.style.display = 'inline-block';
