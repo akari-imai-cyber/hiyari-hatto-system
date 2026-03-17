@@ -159,9 +159,11 @@ async function performLogin(emailInput, password) {
         
         // 🔑 管理者の場合（先にチェック）
         if (profile.role === 'admin') {
-            alert('管理者としてログインしました');
+            showLoginMessage('✅ 管理者としてログインしました。画面を読み込み中...', 'success');
             console.log('✅ 管理者ログイン成功:', authData.user.email);
-            location.reload(); // ページをリロードして認証状態を反映
+            setTimeout(() => {
+                location.reload(); // ページをリロードして認証状態を反映
+            }, 1000);
             return;
         }
         
@@ -174,12 +176,15 @@ async function performLogin(emailInput, password) {
                 .single();
             
             if (company) {
-                alert(`ログインしました\n企業: ${company.company_name}`);
+                showLoginMessage(`✅ ログインしました（企業: ${company.company_name}）画面を読み込み中...`, 'success');
                 console.log('✅ ログイン成功:', company.company_name);
-                location.reload(); // ページをリロードして認証状態を反映
+                setTimeout(() => {
+                    location.reload(); // ページをリロードして認証状態を反映
+                }, 1000);
                 return;
             }
         }
+
         
         console.error('❌ 企業情報が見つかりません');
         await window.supabaseClient.auth.signOut();
@@ -187,10 +192,9 @@ async function performLogin(emailInput, password) {
         showAccessDenied('企業情報の取得に失敗しました。');
     } catch (error) {
         console.error('❌ ログインエラー:', error);
-        alert('ログイン処理中にエラーが発生しました。');
-        showAccessDenied('ログイン処理中にエラーが発生しました。');
+        showLoginMessage('ログイン処理中にエラーが発生しました。', 'error');
     }
-}
+
 
 // フォームからのログイン処理
 async function handleLoginSubmit(event) {
