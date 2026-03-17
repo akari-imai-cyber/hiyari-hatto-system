@@ -194,7 +194,7 @@ async function performLogin(emailInput, password) {
         console.error('❌ ログインエラー:', error);
         showLoginMessage('ログイン処理中にエラーが発生しました。', 'error');
     }
-
+}
 
 // フォームからのログイン処理
 async function handleLoginSubmit(event) {
