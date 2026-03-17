@@ -20,7 +20,7 @@
 　　<script src="js/auth-supabase.js?v=20260317003"></script>
 
     
-      <!-- 認証チェック実行 -->
+    <!-- 認証チェック実行 -->
     <script>
     // DOMが完全に読み込まれてから認証チェックを実行
     window.addEventListener('DOMContentLoaded', async function() {
@@ -31,30 +31,41 @@
             await initializeApp();
         }
         
-        // 少し待機してから関数の存在を確認
-        console.log('📍 checkAuthentication 関数:', typeof window.checkAuthentication);
+        // auth-supabase.js の読み込みを待つ（最大3秒）
+        let retries = 0;
+        const maxRetries = 30;
         
-        // login-overlay 要素の確認
-        const loginOverlay = document.getElementById('login-overlay');
-        console.log('📍 login-overlay 要素:', loginOverlay);
-        
-        // checkAuthentication が定義されているか確認
-        if (typeof window.checkAuthentication === 'function') {
-            const authenticated = await window.checkAuthentication();
-            if (!authenticated) {
-                console.log('❌ 認証されていません - ログインオーバーレイ表示済み');
-            } else {
-                console.log('✅ 認証済み - メインコンテンツ表示');
+        const waitForAuth = setInterval(async () => {
+            retries++;
+            console.log(`📍 checkAuthentication 関数確認 (${retries}/${maxRetries}):`, typeof window.checkAuthentication);
+            
+            if (typeof window.checkAuthentication === 'function') {
+                clearInterval(waitForAuth);
+                
+                // login-overlay 要素の確認
+                const loginOverlay = document.getElementById('login-overlay');
+                console.log('📍 login-overlay 要素:', loginOverlay);
+                
+                // 認証チェック実行
+                const authenticated = await window.checkAuthentication();
+                if (!authenticated) {
+                    console.log('❌ 認証されていません - ログインオーバーレイ表示済み');
+                } else {
+                    console.log('✅ 認証済み - メインコンテンツ表示');
+                }
+            } else if (retries >= maxRetries) {
+                clearInterval(waitForAuth);
+                console.error('❌ checkAuthentication 関数が見つかりません（タイムアウト）');
+                // 手動でログインオーバーレイを表示
+                const loginOverlay = document.getElementById('login-overlay');
+                if (loginOverlay) {
+                    loginOverlay.style.display = 'flex';
+                }
             }
-        } else {
-            console.error('❌ checkAuthentication 関数が見つかりません');
-            // 手動でログインオーバーレイを表示
-            if (loginOverlay) {
-                loginOverlay.style.display = 'flex';
-            }
-        }
+        }, 100); // 100ms ごとにチェック
     });
     </script>
+
 
         
         if (auth && auth.authenticated) {
