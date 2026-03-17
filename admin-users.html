@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ユーザー管理 - ヒヤリハットナビ</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         .admin-container {
@@ -190,19 +191,26 @@
 <body>
     <!-- ヘッダー -->
     <header class="header">
-        <div class="header-left">
-            <a href="#" id="back-to-top" style="display: none;">← トップ</a>
-            <nav class="main-nav">
-                <a href="index.html">報告入力</a>
-                <a href="dashboard.html">ダッシュボード</a>
-                <a href="analytics.html">分析</a>
-                <a href="admin-users.html" class="active">ユーザー管理</a>
-            </nav>
-        </div>
-        <div class="user-info" id="user-info">
-            <div class="company-name" id="display-company">読み込み中...</div>
-            <div class="user-email" id="display-email">読み込み中...</div>
-            <button onclick="handleLogout()" class="btn-logout">ログアウト</button>
+        <div class="header-content">
+            <h1 class="logo">🚛 ヒヤリハットナビ</h1>
+            <a href="landing.html" style="color: white; text-decoration: none; font-size: 0.9rem; margin-left: 20px;">← トップページに戻る</a>
+            <div class="header-right">
+                <div id="user-info" class="user-info" style="display: none;">
+                    <span class="user-company" id="display-company">読み込み中...</span>
+                    <span class="user-email" id="display-email">読み込み中...</span>
+                    <button class="btn-logout" onclick="handleLogout()" title="ログアウト">🚪</button>
+                </div>
+                <nav class="nav">
+                    <a href="index.html" class="nav-link">報告入力</a>
+                    <a href="dashboard.html" class="nav-link">ダッシュボード</a>
+                    <a href="analytics.html" class="nav-link">分析</a>
+                    <a href="admin.html" class="nav-link" id="admin-link" style="display: none;">企業管理</a>
+                    <a href="admin-reports.html" class="nav-link" id="admin-reports-link" style="display: inline-block;">報告管理</a>
+                    <a href="admin-users.html" class="nav-link active" id="admin-users-link" style="display: inline-block;">ユーザー管理</a>
+                    <a href="import-data.html" class="nav-link" id="import-data-link" style="display: none;">📥 データインポート</a>
+                    <a href="admin-data-fix.html" class="nav-link" id="data-fix-link" style="display: none;">🔧 データ修正</a>
+                </nav>
+            </div>
         </div>
     </header>
 
@@ -231,6 +239,11 @@
             </table>
         </div>
     </main>
+    
+    <footer class="footer">
+        <p>&copy; 2026 NLP協同組合</p>
+    </footer>
+    </div>
 
     <!-- ユーザー追加モーダル -->
     <div class="modal" id="add-user-modal">
@@ -280,6 +293,74 @@
     
     <!-- Auth -->
     <script src="js/auth-supabase.js?v=20260317005"></script>
+    
+    <!-- 認証チェック実行 -->
+    <script>
+    (async function() {
+        // Supabaseクライアント初期化を待つ
+        if (typeof initializeApp === 'function') {
+            initializeApp();
+        }
+        
+        const authenticated = await checkAuthentication();
+        if (!authenticated) {
+            // アクセス拒否の場合は処理が中断される
+        }
+    })();
+    </script>
+    
+    <!-- ユーザー情報表示 -->
+    <script>
+    window.addEventListener('authComplete', function(e) {
+        const auth = e.detail;
+        console.log('🔍 admin-users.html - 認証情報:', auth);
+        console.log('🔍 admin-users.html - ロール:', auth.role);
+        
+        const userInfo = document.getElementById('user-info');
+        const displayCompany = document.getElementById('display-company');
+        const displayEmail = document.getElementById('display-email');
+        const adminReportsLink = document.getElementById('admin-reports-link');
+        const adminUsersLink = document.getElementById('admin-users-link');
+        const importDataLink = document.getElementById('import-data-link');
+        const dataFixLink = document.getElementById('data-fix-link');
+        
+        if (auth && auth.authenticated) {
+            displayCompany.textContent = auth.companyName || auth.companyCode || '企業名不明';
+            displayEmail.textContent = auth.email || 'メール不明';
+            userInfo.style.display = 'flex';
+            
+            console.log('🔍 ロールチェック:', auth.role, 'company_admin?', auth.role === 'company_admin', 'admin?', auth.role === 'admin');
+            
+            // システム管理者のみ「企業管理」リンクを表示
+            if (auth.role === 'admin') {
+                const adminLink = document.getElementById('admin-link');
+                if (adminLink) {
+                    adminLink.style.display = 'inline-block';
+                    console.log('✅ 企業管理リンク表示');
+                }
+            }
+            
+            // 企業管理者 または システム管理者の場合は「報告管理」「ユーザー管理」「データインポート」「データ修正」リンクを表示
+            if (auth.role === 'company_admin' || auth.role === 'admin') {
+                console.log('✅ 管理者リンク表示');
+                if (adminReportsLink) adminReportsLink.style.display = 'inline-block';
+                if (adminUsersLink) adminUsersLink.style.display = 'inline-block';
+                if (importDataLink) importDataLink.style.display = 'inline-block';
+                if (dataFixLink) dataFixLink.style.display = 'inline-block';
+            } else {
+                console.log('❌ 一般ユーザー - 管理者リンク非表示');
+            }
+        }
+    });
+    
+    async function handleLogout() {
+        if (confirm('ログアウトしますか？')) {
+            await window.supabaseClient.auth.signOut();
+            alert('ログアウトしました');
+            location.reload();
+        }
+    }
+    </script>
     
     <!-- Admin Users Script -->
     <script src="js/admin-users.js"></script>
