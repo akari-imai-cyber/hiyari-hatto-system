@@ -108,22 +108,11 @@ async function checkAuthentication() {
 
 // ログインダイアログを表示
 function showLoginDialog() {
-    const email = prompt('企業コードまたはメールアドレスを入力してください\n\n例:\n- nlp-test\n- nlp-test@company.local');
-    
-    if (!email || email.trim() === '') {
-        showAccessDenied('企業コードが入力されていません。');
-        return;
+    // ログインフォームを表示
+    const loginOverlay = document.getElementById('login-overlay');
+    if (loginOverlay) {
+        loginOverlay.style.display = 'flex';
     }
-    
-    const password = prompt('パスワードを入力してください');
-    
-    if (!password || password.trim() === '') {
-        showAccessDenied('パスワードが入力されていません。');
-        return;
-    }
-    
-    // ログイン処理
-    performLogin(email.trim(), password);
 }
 
 // ログイン処理
@@ -196,6 +185,105 @@ async function performLogin(emailInput, password) {
         await window.supabaseClient.auth.signOut();
         alert('企業情報の取得に失敗しました。');
         showAccessDenied('企業情報の取得に失敗しました。');
+    } catch (error) {
+        console.error('❌ ログインエラー:', error);
+        alert('ログイン処理中にエラーが発生しました。');
+        showAccessDenied('ログイン処理中にエラーが発生しました。');
+    }
+}
+
+// フォームからのログイン処理
+async function handleLoginSubmit(event) {
+    event.preventDefault();
+    
+    const emailInput = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const submitBtn = document.getElementById('login-submit-btn');
+    const messageEl = document.getElementById('login-message');
+    
+    if (!emailInput || !password) {
+        showLoginMessage('メールアドレスとパスワードを入力してください', 'error');
+        return;
+    }
+    
+    // ボタンを無効化
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'ログイン中...';
+    
+    // ログイン実行
+    await performLogin(emailInput, password);
+}
+
+// パスワードリセット処理
+async function handlePasswordReset(event) {
+    event.preventDefault();
+    
+    const resetEmail = document.getElementById('reset-email').value.trim();
+    const submitBtn = document.getElementById('reset-submit-btn');
+    const messageEl = document.getElementById('reset-message');
+    
+    if (!resetEmail) {
+        showResetMessage('メールアドレスを入力してください', 'error');
+        return;
+    }
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = '送信中...';
+    
+    try {
+        // Supabase パスワードリセットメール送信
+        const { error } = await window.supabaseClient.auth.resetPasswordForEmail(resetEmail, {
+            redirectTo: `${window.location.origin}/reset-password.html`
+        });
+        
+        if (error) throw error;
+        
+        showResetMessage('✅ パスワードリセットメールを送信しました。メールをご確認ください。', 'success');
+        
+        // 3秒後にログイン画面に戻る
+        setTimeout(() => {
+            showLoginForm();
+        }, 3000);
+        
+    } catch (error) {
+        console.error('パスワードリセットエラー:', error);
+        showResetMessage('❌ メール送信に失敗しました: ' + error.message, 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'リセットメールを送信';
+    }
+}
+
+// ログインメッセージ表示
+function showLoginMessage(text, type) {
+    const messageEl = document.getElementById('login-message');
+    if (messageEl) {
+        messageEl.textContent = text;
+        messageEl.className = `message ${type} show`;
+    }
+}
+
+// リセットメッセージ表示
+function showResetMessage(text, type) {
+    const messageEl = document.getElementById('reset-message');
+    if (messageEl) {
+        messageEl.textContent = text;
+        messageEl.className = `message ${type} show`;
+    }
+}
+
+// ログインフォーム表示
+function showLoginForm() {
+    document.getElementById('login-form-container').style.display = 'block';
+    document.getElementById('reset-form-container').style.display = 'none';
+    document.getElementById('login-message').className = 'message';
+}
+
+// パスワードリセットフォーム表示
+function showResetForm() {
+    document.getElementById('login-form-container').style.display = 'none';
+    document.getElementById('reset-form-container').style.display = 'block';
+    document.getElementById('reset-message').className = 'message';
         
     } catch (error) {
         console.error('❌ ログインエラー:', error);
