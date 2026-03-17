@@ -288,13 +288,8 @@ function showResetForm() {
     document.getElementById('login-form-container').style.display = 'none';
     document.getElementById('reset-form-container').style.display = 'block';
     document.getElementById('reset-message').className = 'message';
-        
-    } catch (error) {
-        console.error('❌ ログインエラー:', error);
-        alert('ログイン処理中にエラーが発生しました。');
-        showAccessDenied('ログイン処理中にエラーが発生しました。');
-    }
 }
+
 
 // アクセス拒否画面を表示
 function showAccessDenied(message) {
