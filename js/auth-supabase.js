@@ -335,3 +335,7 @@ async function logout() {
 window.checkAuthentication = checkAuthentication;
 window.getCurrentAuth = getCurrentAuth;
 window.logout = logout;
+window.handleLoginSubmit = handleLoginSubmit;
+window.handlePasswordReset = handlePasswordReset;
+window.showLoginForm = showLoginForm;
+window.showResetForm = showResetForm;
