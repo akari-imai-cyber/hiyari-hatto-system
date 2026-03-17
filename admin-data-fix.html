@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>データ修正 - ヒヤリハットナビ</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .fix-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .fix-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .fix-section h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .badge-high {
+            background: #fee;
+            color: #c00;
+        }
+
+        .badge-medium {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+
+        .badge-low {
+            background: #dfe6e9;
+            color: #2d3436;
+        }
+
+        .fix-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .fix-info p {
+            margin: 8px 0;
+            color: #666;
+        }
+
+        .fix-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .fix-button:hover {
+            background: #0052a3;
+        }
+
+        .fix-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .fix-button.danger {
+            background: #dc3545;
+        }
+
+        .fix-button.danger:hover {
+            background: #c82333;
+        }
+
+        .progress-container {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0066cc, #00a8ff);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .progress-info {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .result-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result-details {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .warning-box strong {
+            color: #856404;
+        }
+
+        .log-container {
+            display: none;
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+        }
+
+        .log-success {
+            color: #28a745;
+        }
+
+        .log-error {
+            color: #dc3545;
+        }
+
+        .log-info {
+            color: #0066cc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">🚛 ヒヤリハットナビ</h1>
+                <a href="landing.html" style="color: white; text-decoration: none; font-size: 0.9rem; margin-left: 20px;">← トップページに戻る</a>
+                <div class="header-right">
+                    <div id="user-info" class="user-info" style="display: none;">
+                        <span class="user-company" id="display-company">読み込み中...</span>
+                        <span class="user-email" id="display-email">読み込み中...</span>
+                        <button class="btn-logout" onclick="handleLogout()" title="ログアウト">🚪</button>
+                    </div>
+                    <nav class="nav">
+                        <a href="index.html" class="nav-link">報告入力</a>
+                        <a href="dashboard.html" class="nav-link">ダッシュボード</a>
+                        <a href="analytics.html" class="nav-link">分析</a>
+                        <a href="admin.html" class="nav-link" id="admin-link" style="display: none;">企業管理</a>
+                        <a href="admin-reports.html" class="nav-link" id="admin-reports-link" style="display: inline-block;">報告管理</a>
+                        <a href="admin-users.html" class="nav-link" id="admin-users-link" style="display: inline-block;">ユーザー管理</a>
+                        <a href="import-data.html" class="nav-link" id="import-data-link" style="display: inline-block;">📥 データインポート</a>
+                        <a href="admin-data-fix.html" class="nav-link active" id="data-fix-link" style="display: inline-block;">🔧 データ修正</a>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+    <main class="fix-container">
+        <h1>🤖 AI一括データ修正</h1>
+        <p style="color: #666; margin-bottom: 30px;">AIを使用して、データの品質を自動的に改善します。</p>
+
+        <!-- 統計情報 -->
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="stat-stores">-</div>
+                <div class="stat-label">店舗名要修正</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="stat-severity">-</div>
+                <div class="stat-label">重大度未設定</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="stat-cargo">-</div>
+                <div class="stat-label">荷物情報なし</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="stat-category">-</div>
+                <div class="stat-label">カテゴリ空</div>
+            </div>
+        </div>
+
+        <!-- 1. 店舗名→住所変換 -->
+        <div class="fix-section">
+            <h2>
+                🏪 店舗名→住所変換
+                <span class="badge badge-high" id="badge-stores">0件</span>
+            </h2>
+            <div class="fix-info">
+                <p><strong>機能：</strong>発生場所に店舗名が入っている場合、Google Places APIで住所に変換します。</p>
+                <p><strong>処理：</strong>元の店舗名は「エリア詳細」に移動します。</p>
+                <p><strong>例：</strong>「イオン新潟南店」→ 発生場所: 「新潟県新潟市江南区...」、エリア詳細: 「イオン新潟南店」</p>
+            </div>
+            <div class="warning-box">
+                <strong>⚠️ 注意：</strong>この処理にはGoogle Places API（有料）が必要です。現在は<strong>模擬モード</strong>で動作します。
+            </div>
+            <button class="fix-button" onclick="fixStoreNames()">
+                🔄 店舗名を住所に変換
+            </button>
+            <div class="progress-container" id="progress-stores">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill-stores" style="width: 0%">0%</div>
+                </div>
+                <div class="progress-info" id="progress-info-stores"></div>
+            </div>
+            <div class="result-container" id="result-stores"></div>
+            <div class="log-container" id="log-stores"></div>
+        </div>
+
+        <!-- 2. 重大度AI判定 -->
+        <div class="fix-section">
+            <h2>
+                🔢 重大度AI自動判定
+                <span class="badge badge-high" id="badge-severity">0件</span>
+            </h2>
+            <div class="fix-info">
+                <p><strong>機能：</strong>重大度が未設定のレコードを、AIが内容から1-5で自動判定します。</p>
+                <p><strong>判定基準：</strong></p>
+                <ul style="margin: 10px 0; padding-left: 30px;">
+                    <li><strong>5（最重要）：</strong>死亡事故、重傷、重大な損害</li>
+                    <li><strong>4（重要）：</strong>入院レベルの怪我、高額な損害</li>
+                    <li><strong>3（中程度）：</strong>軽傷、中程度の損害</li>
+                    <li><strong>2（低）：</strong>軽微な接触、小さな損害</li>
+                    <li><strong>1（軽微）：</strong>ヒヤリハット、損害なし</li>
+                </ul>
+            </div>
+            <button class="fix-button" onclick="fixSeverity()">
+                🤖 AIで重大度を判定
+            </button>
+            <div class="progress-container" id="progress-severity">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill-severity" style="width: 0%">0%</div>
+                </div>
+                <div class="progress-info" id="progress-info-severity"></div>
+            </div>
+            <div class="result-container" id="result-severity"></div>
+            <div class="log-container" id="log-severity"></div>
+        </div>
+
+        <!-- 3. 荷物情報補完 -->
+        <div class="fix-section">
+            <h2>
+                📦 荷物情報AI補完
+                <span class="badge badge-medium" id="badge-cargo">0件</span>
+            </h2>
+            <div class="fix-info">
+                <p><strong>機能：</strong>荷物情報が空のレコードを、AIが状況説明から推測して補完します。</p>
+                <p><strong>推測方法：</strong>「詳しい状況」「メモ」から荷物の種類や詳細を抽出します。</p>
+                <p><strong>例：</strong>「冷凍マグロを運搬中に...」→ 荷物情報: 「冷凍マグロ」</p>
+            </div>
+            <button class="fix-button" onclick="fixCargoInfo()">
+                🤖 荷物情報を補完
+            </button>
+            <div class="progress-container" id="progress-cargo">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill-cargo" style="width: 0%">0%</div>
+                </div>
+                <div class="progress-info" id="progress-info-cargo"></div>
+            </div>
+            <div class="result-container" id="result-cargo"></div>
+            <div class="log-container" id="log-cargo"></div>
+        </div>
+
+        <!-- 4. 事象カテゴリ修正 -->
+        <div class="fix-section">
+            <h2>
+                📍 事象カテゴリ自動判定
+                <span class="badge badge-low" id="badge-category">0件</span>
+            </h2>
+            <div class="fix-info">
+                <p><strong>機能：</strong>事象カテゴリが空のレコードを、AIが内容から判定します。</p>
+                <p><strong>判定：</strong>「走行中」「荷役・作業中」「その他」から選択</p>
+            </div>
+            <button class="fix-button" onclick="fixIncidentType()">
+                🤖 事象カテゴリを判定
+            </button>
+            <div class="progress-container" id="progress-category">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill-category" style="width: 0%">0%</div>
+                </div>
+                <div class="progress-info" id="progress-info-category"></div>
+            </div>
+            <div class="result-container" id="result-category"></div>
+            <div class="log-container" id="log-category"></div>
+        </div>
+
+        <!-- 一括実行 -->
+        <div class="fix-section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h2 style="color: white;">⚡ すべて一括実行</h2>
+            <p style="opacity: 0.9; margin-bottom: 15px;">すべての修正処理を順番に実行します（数分かかる場合があります）</p>
+            <button class="fix-button danger" onclick="fixAll()" style="background: white; color: #764ba2;">
+                🚀 すべて一括修正
+            </button>
+        </div>
+    </main>
+    
+    <footer class="footer">
+        <p>&copy; 2026 NLP協同組合</p>
+    </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/auth-supabase.js"></script>
+    <script src="js/admin-data-fix.js"></script>
+</body>
+</html>

@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>データインポート - ヒヤリハット報告システム</title>
+    <title>データインポート - ヒヤリハットナビ</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         .import-container {
             max-width: 1200px;
@@ -142,10 +144,24 @@
     <div class="container">
         <header class="header">
             <div class="header-content">
-                <h1>📊 データインポート</h1>
-                <div class="user-info">
-                    <span id="user-display"></span>
-                    <button onclick="logout()" class="btn btn-secondary">ログアウト</button>
+                <h1 class="logo">🚛 ヒヤリハットナビ</h1>
+                <a href="landing.html" style="color: white; text-decoration: none; font-size: 0.9rem; margin-left: 20px;">← トップページに戻る</a>
+                <div class="header-right">
+                    <div id="user-info" class="user-info" style="display: none;">
+                        <span class="user-company" id="display-company">読み込み中...</span>
+                        <span class="user-email" id="display-email">読み込み中...</span>
+                        <button class="btn-logout" onclick="handleLogout()" title="ログアウト">🚪</button>
+                    </div>
+                    <nav class="nav">
+                        <a href="index.html" class="nav-link">報告入力</a>
+                        <a href="dashboard.html" class="nav-link">ダッシュボード</a>
+                        <a href="analytics.html" class="nav-link">分析</a>
+                        <a href="admin.html" class="nav-link" id="admin-link" style="display: none;">企業管理</a>
+                        <a href="admin-reports.html" class="nav-link" id="admin-reports-link" style="display: inline-block;">報告管理</a>
+                        <a href="admin-users.html" class="nav-link" id="admin-users-link" style="display: inline-block;">ユーザー管理</a>
+                        <a href="import-data.html" class="nav-link active" id="import-data-link" style="display: inline-block;">📥 データインポート</a>
+                        <a href="admin-data-fix.html" class="nav-link" id="data-fix-link" style="display: inline-block;">🔧 データ修正</a>
+                    </nav>
                 </div>
             </div>
         </header>
@@ -230,6 +246,10 @@
             </div>
         </div>
     </div>
+    
+    <footer class="footer">
+        <p>&copy; 2026 NLP協同組合</p>
+    </footer>
 
     <!-- SheetJS ライブラリ -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>

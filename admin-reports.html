@@ -16,138 +16,106 @@
     <!-- Supabase クライアント -->
     <script src="js/config.js?v=20260301a"></script>
     
-    <!-- Supabase Auth 管理者認証 -->
+    <!-- Supabase Auth 認証システム -->
+    <script src="js/auth-supabase.js?v=20260317005"></script>
+    
+    <!-- 認証チェック実行 -->
     <script>
-        // ページが読み込まれる前に認証チェック
-        (async function() {
-            const { createClient } = supabase;
-            const supabaseUrl = 'https://yimeoggmsubtcmxddyat.supabase.co';
-            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpbWVvZ2dtc3VidGNteGRkeWF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5OTcwMTcsImV4cCI6MjA4NzU3MzAxN30.wQY_t9umGhqshO1UQJ-aHj3MPUimzJgOso3W9YmKYlA';
-            const supabaseClient = createClient(supabaseUrl, supabaseKey);
-            window.supabaseClient = supabaseClient;
-            
-            // 既存のセッションを確認
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            
-            if (session) {
-                const { data: profile } = await supabaseClient
-                    .from('profiles')
-                    .select('role, company_id')
-                    .eq('id', session.user.id)
-                    .single();
-                
-                // admin または company_admin なら OK
-                if (profile && (profile.role === 'admin' || profile.role === 'company_admin')) {
-                    console.log('✅ 管理者認証済み:', session.user.email, '権限:', profile.role);
-                    displayAdminInfo(session.user.email);
-                    // company_id をグローバルに保存（後で使用）
-                    window.currentUserCompanyId = profile.company_id;
-                    window.currentUserRole = profile.role;
-                    return;
-                }
-            }
-            
-            // 認証が必要
-            const email = prompt('管理者メールアドレスを入力してください\n例: akari-imai@tehara.co.jp');
-            if (!email) {
-                alert('認証が必要です');
-                location.href = 'admin.html';
-                return;
-            }
-            
-            const password = prompt('パスワードを入力してください');
-            if (!password) {
-                alert('認証が必要です');
-                location.href = 'admin.html';
-                return;
-            }
-            
-            const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
-                email: email.trim(),
-                password: password
-            });
-            
-            if (authError) {
-                alert('認証に失敗しました。\n' + authError.message);
-                location.href = 'admin.html';
-                return;
-            }
-            
-            // 管理者権限を確認
-            const { data: profile } = await supabaseClient
-                .from('profiles')
-                .select('role, company_id')
-                .eq('id', authData.user.id)
-                .single();
-            
-            // admin または company_admin なら OK
-            if (!profile || (profile.role !== 'admin' && profile.role !== 'company_admin')) {
-                alert('管理者権限がありません');
-                await supabaseClient.auth.signOut();
-                location.href = 'admin.html';
-                return;
-            }
-            
-            // company_id をグローバルに保存
-            window.currentUserCompanyId = profile.company_id;
-            window.currentUserRole = profile.role;
-            displayAdminInfo(authData.user.email);
-        })();
+    (async function() {
+        // Supabaseクライアント初期化を待つ
+        if (typeof initializeApp === 'function') {
+            initializeApp();
+        }
         
-        function displayAdminInfo(email) {
-            const adminUserInfo = document.getElementById('admin-user-info');
-            const adminEmailDisplay = document.getElementById('admin-display-email');
-            if (adminEmailDisplay) {
-                adminEmailDisplay.textContent = email || 'メール不明';
-            }
-            if (adminUserInfo) {
-                adminUserInfo.style.display = 'flex';
-            }
+        const authenticated = await checkAuthentication();
+        if (!authenticated) {
+            // アクセス拒否の場合は処理が中断される
+        }
+    })();
+    </script>
+    
+    <!-- ユーザー情報表示 -->
+    <script>
+    window.addEventListener('authComplete', function(e) {
+        const auth = e.detail;
+        console.log('🔍 admin-reports.html - 認証情報:', auth);
+        console.log('🔍 admin-reports.html - ロール:', auth.role);
+        
+        const userInfo = document.getElementById('user-info');
+        const displayCompany = document.getElementById('display-company');
+        const displayEmail = document.getElementById('display-email');
+        const adminReportsLink = document.getElementById('admin-reports-link');
+        const adminUsersLink = document.getElementById('admin-users-link');
+        const importDataLink = document.getElementById('import-data-link');
+        const dataFixLink = document.getElementById('data-fix-link');
+        
+        if (auth && auth.authenticated) {
+            displayCompany.textContent = auth.companyName || auth.companyCode || '企業名不明';
+            displayEmail.textContent = auth.email || 'メール不明';
+            userInfo.style.display = 'flex';
+            
+            // company_id をグローバルに保存（後で使用）
+            window.currentUserCompanyId = auth.companyId;
+            window.currentUserRole = auth.role;
+            
+            console.log('🔍 ロールチェック:', auth.role, 'company_admin?', auth.role === 'company_admin', 'admin?', auth.role === 'admin');
             
             // システム管理者のみ「企業管理」リンクを表示
-            if (window.currentUserRole === 'admin') {
+            if (auth.role === 'admin') {
                 const adminLink = document.getElementById('admin-link');
                 if (adminLink) {
                     adminLink.style.display = 'inline-block';
+                    console.log('✅ 企業管理リンク表示');
                 }
             }
-        }
-        
-        async function adminLogout() {
-            if (confirm('ログアウトしますか？')) {
-                await window.supabaseClient.auth.signOut();
-                alert('ログアウトしました。');
-                location.href = 'admin.html';
+            
+            // 企業管理者 または システム管理者の場合は「報告管理」「ユーザー管理」「データインポート」「データ修正」リンクを表示
+            if (auth.role === 'company_admin' || auth.role === 'admin') {
+                console.log('✅ 管理者リンク表示');
+                if (adminReportsLink) adminReportsLink.style.display = 'inline-block';
+                if (adminUsersLink) adminUsersLink.style.display = 'inline-block';
+                if (importDataLink) importDataLink.style.display = 'inline-block';
+                if (dataFixLink) dataFixLink.style.display = 'inline-block';
+            } else {
+                console.log('❌ 一般ユーザー - 管理者リンク非表示');
             }
         }
+    });
+    
+    async function handleLogout() {
+        if (confirm('ログアウトしますか？')) {
+            await window.supabaseClient.auth.signOut();
+            alert('ログアウトしました');
+            location.reload();
+        }
+    }
     </script>
 </head>
 <body>
-    <!-- ナビゲーション -->
-    <nav class="main-nav">
-        <div class="nav-container">
-            <div class="nav-logo">
-                <span class="logo-icon">🚛</span>
-                <span class="logo-text">ヒヤリハットナビ</span>
-                <a href="landing.html" style="color: white; text-decoration: none; font-size: 0.9rem; margin-left: 20px;">← トップページに戻る</a>
-            </div>
-            <div class="nav-right">
-                <div id="admin-user-info" class="admin-user-info" style="display: none;">
-                    <span class="admin-label">👤 管理者:</span>
-                    <span class="admin-email" id="admin-display-email">読み込み中...</span>
-                    <button class="btn-admin-logout" onclick="adminLogout()" title="ログアウト">🚪</button>
+    <!-- ヘッダー -->
+    <header class="header">
+        <div class="header-content">
+            <h1 class="logo">🚛 ヒヤリハットナビ</h1>
+            <a href="landing.html" style="color: white; text-decoration: none; font-size: 0.9rem; margin-left: 20px;">← トップページに戻る</a>
+            <div class="header-right">
+                <div id="user-info" class="user-info" style="display: none;">
+                    <span class="user-company" id="display-company">読み込み中...</span>
+                    <span class="user-email" id="display-email">読み込み中...</span>
+                    <button class="btn-logout" onclick="handleLogout()" title="ログアウト">🚪</button>
                 </div>
-                <div class="nav-links">
-                    <a href="index.html">報告入力</a>
-                    <a href="dashboard.html">ダッシュボード</a>
-                    <a href="analytics.html">分析</a>
-                    <a href="admin.html" id="admin-link" style="display: none;">企業管理</a>
-                    <a href="admin-reports.html" class="active">報告管理</a>
-                    <a href="admin-users.html">ユーザー管理</a>
-                </div>
+                <nav class="nav">
+                    <a href="index.html" class="nav-link">報告入力</a>
+                    <a href="dashboard.html" class="nav-link">ダッシュボード</a>
+                    <a href="analytics.html" class="nav-link">分析</a>
+                    <a href="admin.html" class="nav-link" id="admin-link" style="display: none;">企業管理</a>
+                    <a href="admin-reports.html" class="nav-link active" id="admin-reports-link" style="display: inline-block;">報告管理</a>
+                    <a href="admin-users.html" class="nav-link" id="admin-users-link" style="display: inline-block;">ユーザー管理</a>
+                    <a href="import-data.html" class="nav-link" id="import-data-link" style="display: none;">📥 データインポート</a>
+                    <a href="admin-data-fix.html" class="nav-link" id="data-fix-link" style="display: none;">🔧 データ修正</a>
+                </nav>
             </div>
         </div>
-    </nav>
+    </header>
 
     <!-- メインコンテンツ -->
     <div class="admin-container">
@@ -200,6 +168,10 @@
             </div>
         </div>
     </div>
+    
+    <footer class="footer">
+        <p>&copy; 2026 NLP協同組合</p>
+    </footer>
 
     <!-- 編集モーダル -->
     <div id="edit-report-modal" class="modal hidden">
