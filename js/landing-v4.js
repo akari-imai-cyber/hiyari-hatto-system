@@ -96,15 +96,14 @@ document.getElementById('register-form')?.addEventListener('submit', async (e) =
         console.log('📝 登録情報:', { companyName, email, phone });
         console.log('🔐 生成されたパスワード:', generatedPassword);
         
-       // Supabase Auth で新規ユーザー登録
-const supabaseClient = window.supabaseClient || window.supabase;
-
-if (!supabaseClient || !supabaseClient.auth) {
-    throw new Error('Supabase client not properly initialized');
-}
-
-const { data: authData, error: authError } = await supabaseClient.auth.signUp({
-
+        // Supabase Auth で新規ユーザー登録
+        const supabaseClient = window.supabaseClient || window.supabase;
+        
+        if (!supabaseClient || !supabaseClient.auth) {
+            throw new Error('Supabase client not properly initialized');
+        }
+        
+        const { data: authData, error: authError } = await supabaseClient.auth.signUp({
             email: email,
             password: generatedPassword,
             options: {
@@ -138,6 +137,59 @@ const { data: authData, error: authError } = await supabaseClient.auth.signUp({
         
         console.log('✅ Supabase Auth 登録成功:', authData);
         
+        // 企業コードを生成
+        const companyCode = 'COMP_' + Date.now().toString(36).toUpperCase();
+        console.log('🏢 生成された企業コード:', companyCode);
+        
+        // companies テーブルに企業を登録
+        const { data: companyData, error: companyError } = await supabaseClient
+            .from('companies')
+            .insert({
+                company_code: companyCode,
+                company_name: companyName,
+                industry: '物流業',
+                plan: 'free',
+                max_users: 10,
+                is_active: true
+            })
+            .select()
+            .single();
+        
+        if (companyError) {
+            console.error('❌ 企業登録エラー:', companyError);
+            // Auth ユーザーは作成済みだが、企業登録に失敗
+            messageEl.textContent = '❌ 企業情報の登録に失敗しました。管理者にお問い合わせください。';
+            messageEl.style.color = '#ef4444';
+            registerBtn.disabled = false;
+            registerBtn.textContent = 'いますぐ始める';
+            return;
+        }
+        
+        console.log('✅ 企業登録成功:', companyData);
+        
+        // profiles テーブルにユーザー情報を登録
+        const { data: profileData, error: profileError } = await supabaseClient
+            .from('profiles')
+            .insert({
+                id: authData.user.id,
+                email: email,
+                role: 'company_admin',
+                company_id: companyData.id
+            })
+            .select()
+            .single();
+        
+        if (profileError) {
+            console.error('❌ プロフィール登録エラー:', profileError);
+            messageEl.textContent = '❌ ユーザー情報の登録に失敗しました。管理者にお問い合わせください。';
+            messageEl.style.color = '#ef4444';
+            registerBtn.disabled = false;
+            registerBtn.textContent = 'いますぐ始める';
+            return;
+        }
+        
+        console.log('✅ プロフィール登録成功:', profileData);
+        
         // 成功メッセージ
         messageEl.innerHTML = `
             ✅ <strong>登録が完了しました!</strong><br>
@@ -146,6 +198,7 @@ const { data: authData, error: authError } = await supabaseClient.auth.signUp({
             受信メールを確認して、ログインしてください。<br>
             <br>
             <strong>ログイン情報:</strong><br>
+            企業コード: <code style="background: #f3f4f6; padding: 0.25rem 0.5rem; border-radius: 4px;">${companyCode}</code><br>
             メールアドレス: <code style="background: #f3f4f6; padding: 0.25rem 0.5rem; border-radius: 4px;">${email}</code><br>
             パスワード: <code style="background: #f3f4f6; padding: 0.25rem 0.5rem; border-radius: 4px;">${generatedPassword}</code><br>
             <br>
@@ -162,7 +215,7 @@ const { data: authData, error: authError } = await supabaseClient.auth.signUp({
         
         // Supabase からの確認メールを待つメッセージ
         setTimeout(() => {
-            alert(`✅ 登録完了しました!\n\nログイン情報:\nメール: ${email}\nパスワード: ${generatedPassword}\n\nこのパスワードは必ずメモしてください。\n確認メールも送信されていますので、メールボックスをご確認ください。`);
+            alert(`✅ 登録完了しました!\n\nログイン情報:\n企業コード: ${companyCode}\nメール: ${email}\nパスワード: ${generatedPassword}\n\nこのパスワードは必ずメモしてください。\n確認メールも送信されていますので、メールボックスをご確認ください。`);
         }, 500);
         
     } catch (error) {
