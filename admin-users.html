@@ -5,269 +5,283 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ユーザー管理 - ヒヤリハットナビ</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/admin.css">
-    <link rel="stylesheet" href="css/admin-users.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
-    
-    <!-- Supabase JS ライブラリ -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- Supabase 設定 -->
-    <script src="js/config.js?v=20260301a"></script>
-    
-    <!-- 認証チェック（管理者と企業管理者） -->
-    <script>
-    window.addEventListener('load', async function() {
-        if (typeof initializeApp === 'function') {
-            initializeApp();
+    <style>
+        .admin-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
         }
-        
-        // セッションチェック
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        
-        if (!session) {
-            const email = prompt('管理者メールアドレスを入力してください\n\n例: akari-imai@tehara.co.jp または nlp-test@company.local');
-            if (!email) {
-                alert('認証が必要です');
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            const password = prompt('パスワードを入力してください');
-            if (!password) {
-                alert('認証が必要です');
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
-                email: email,
-                password: password
-            });
-            
-            if (authError) {
-                alert('認証に失敗しました: ' + authError.message);
-                window.location.href = 'index.html';
-                return;
-            }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
         }
-        
-        // ロールチェック（admin または company_admin）
-        const { data: profile } = await supabaseClient
-            .from('profiles')
-            .select('role, company_id')
-            .eq('id', session.user.id)
-            .single();
-        
-        if (!profile || (profile.role !== 'admin' && profile.role !== 'company_admin')) {
-            alert('管理者権限が必要です');
-            window.location.href = 'index.html';
-            return;
+        .btn-add-user {
+            background: #2563eb;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
         }
-        
-        // グローバル変数に保存
-        window.currentUserRole = profile.role;
-        window.currentUserCompanyId = profile.company_id;
-        
-        console.log('✅ 認証成功:', profile.role);
-        
-        // システム管理者のみ「企業管理」リンクを表示
-        if (profile.role === 'admin') {
-            const adminLink = document.getElementById('admin-link');
-            if (adminLink) {
-                adminLink.style.display = 'inline-block';
-            }
+        .btn-add-user:hover {
+            background: #1d4ed8;
         }
-        
-        // 企業管理者の場合は企業選択を非表示にして自動選択
-        if (profile.role === 'company_admin') {
-            console.log('👨‍💼 企業管理者モード: 企業ID', profile.company_id);
+        .users-table {
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
-    });
-    </script>
+        .users-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .users-table th {
+            background: #f9fafb;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .users-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .users-table tr:hover {
+            background: #f9fafb;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        .badge-admin {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .badge-user {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .modal-header h2 {
+            margin: 0;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .form-group small {
+            display: block;
+            margin-top: 0.25rem;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        .btn-submit {
+            background: #2563eb;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+        }
+        .btn-submit:hover {
+            background: #1d4ed8;
+        }
+        .btn-submit:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .success-message.active {
+            display: block;
+        }
+        .login-info {
+            background: #f3f4f6;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-family: monospace;
+        }
+        .login-info p {
+            margin: 0.5rem 0;
+        }
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+    </style>
 </head>
 <body>
-    <div class="admin-container">
-        <!-- ヘッダー -->
-        <nav class="main-nav">
-            <div class="nav-container">
-                <div class="nav-logo">
-                    <span class="logo-icon">🚛</span>
-                    ヒヤリハットナビ - ユーザー管理
-                    <a href="landing.html" style="color: white; text-decoration: none; font-size: 0.9rem; margin-left: 20px;">← トップページに戻る</a>
-                </div>
-                <div class="nav-links">
-                    <a href="index.html" class="nav-link">報告入力</a>
-                    <a href="dashboard.html" class="nav-link">ダッシュボード</a>
-                    <a href="analytics.html" class="nav-link">分析</a>
-                    <a href="admin.html" class="nav-link" id="admin-link" style="display: none;">企業管理</a>
-                    <a href="admin-reports.html" class="nav-link">報告管理</a>
-                    <a href="admin-users.html" class="nav-link active">ユーザー管理</a>
-                </div>
-            </div>
-        </nav>
-
-        <!-- メインコンテンツ -->
-        <div class="content-wrapper">
-            <div class="admin-header">
-                <h1>👥 ユーザー管理</h1>
-                <p>企業ごとのユーザーを管理し、管理者権限を付与できます</p>
-            </div>
-
-            <!-- 企業選択 -->
-            <div class="card">
-                <div class="card-header">
-                    <h2>企業を選択</h2>
-                </div>
-                <div class="card-body">
-                    <div class="filter-group">
-                        <label for="company-select">企業:</label>
-                        <select id="company-select" class="form-control" onchange="loadUsers()">
-                            <option value="">企業を選択してください...</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ユーザー一覧 -->
-            <div class="card" id="users-card" style="display: none;">
-                <div class="card-header">
-                    <h2 id="company-name-display">ユーザー一覧</h2>
-                    <button class="btn btn-primary" onclick="showAddUserModal()">
-                        ➕ 新しいユーザーを追加
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div id="loading" class="loading">
-                        <div class="spinner"></div>
-                        <p>読み込み中...</p>
-                    </div>
-                    
-                    <div id="users-table" style="display: none;">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>メールアドレス</th>
-                                    <th>氏名</th>
-                                    <th>ロール</th>
-                                    <th>作成日</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="users-tbody">
-                                <!-- ユーザー一覧がここに表示される -->
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div id="no-users" class="empty-state" style="display: none;">
-                        <p>👤 ユーザーが登録されていません</p>
-                        <button class="btn btn-primary" onclick="showAddUserModal()">
-                            ➕ 最初のユーザーを追加
-                        </button>
-                    </div>
-                </div>
-            </div>
+    <!-- ヘッダー -->
+    <header class="header">
+        <div class="header-left">
+            <a href="#" id="back-to-top" style="display: none;">← トップ</a>
+            <nav class="main-nav">
+                <a href="index.html">報告入力</a>
+                <a href="dashboard.html">ダッシュボード</a>
+                <a href="analytics.html">分析</a>
+                <a href="admin-users.html" class="active">ユーザー管理</a>
+            </nav>
         </div>
-    </div>
+        <div class="user-info" id="user-info">
+            <div class="company-name" id="display-company">読み込み中...</div>
+            <div class="user-email" id="display-email">読み込み中...</div>
+            <button onclick="handleLogout()" class="btn-logout">ログアウト</button>
+        </div>
+    </header>
 
-    <!-- 新規ユーザー追加モーダル -->
-    <div id="add-user-modal" class="modal">
+    <!-- メインコンテンツ -->
+    <main class="admin-container">
+        <div class="admin-header">
+            <h1>ユーザー管理</h1>
+            <button class="btn-add-user" onclick="openAddUserModal()">+ 新規ユーザーを追加</button>
+        </div>
+
+        <div class="users-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>メールアドレス</th>
+                        <th>ロール</th>
+                        <th>登録日</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="users-table-body">
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 2rem;">読み込み中...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- ユーザー追加モーダル -->
+    <div class="modal" id="add-user-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>新しいユーザーを追加</h2>
-                <button class="modal-close" onclick="closeAddUserModal()">&times;</button>
+                <h2>新規ユーザーを追加</h2>
+                <button class="modal-close" onclick="closeAddUserModal()">×</button>
             </div>
-            <div class="modal-body">
-                <form id="add-user-form" onsubmit="addUser(event)">
-                    <div class="form-group">
-                        <label>メールアドレス *</label>
-                        <input type="email" id="new-email" class="form-control" required 
-                               placeholder="example@company.local">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>パスワード *</label>
-                        <input type="password" id="new-password" class="form-control" required 
-                               minlength="8" placeholder="8文字以上">
-                        <small>※ 8文字以上で設定してください</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>氏名</label>
-                        <input type="text" id="new-fullname" class="form-control" 
-                               placeholder="山田太郎">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>ロール *</label>
-                        <select id="new-role" class="form-control" required>
-                            <option value="company_user">一般ユーザー</option>
-                            <option value="company_admin">企業管理者</option>
-                        </select>
-                    </div>
-                    
-                    <div class="modal-actions">
-                        <button type="button" class="btn btn-secondary" onclick="closeAddUserModal()">
-                            キャンセル
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            ➕ 追加
-                        </button>
-                    </div>
-                </form>
+
+            <div class="success-message" id="success-message">
+                <strong>✅ ユーザー登録完了</strong>
+                <div class="login-info" id="login-info"></div>
+                <p style="margin-top: 1rem;">📋 <strong>このログイン情報を本人に伝えてください。</strong></p>
             </div>
+
+            <form id="add-user-form">
+                <div class="form-group">
+                    <label for="user-email">メールアドレス *</label>
+                    <input type="email" id="user-email" required placeholder="例: yamada@example.com">
+                    <small>実際のメールアドレスでなくても構いません（例: driver001@dummy.local）</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="user-password">初期パスワード *</label>
+                    <input type="text" id="user-password" required placeholder="例: Driver2024!">
+                    <small>8文字以上、英大文字・小文字・数字を含む</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="user-role">ロール *</label>
+                    <select id="user-role" required>
+                        <option value="company_user">一般ユーザー</option>
+                        <option value="company_admin">管理者</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submit-btn">登録する</button>
+            </form>
         </div>
     </div>
 
-    <!-- 編集モーダル -->
-    <div id="edit-user-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>ユーザー情報を編集</h2>
-                <button class="modal-close" onclick="closeEditUserModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="edit-user-form" onsubmit="saveUser(event)">
-                    <input type="hidden" id="edit-user-id">
-                    
-                    <div class="form-group">
-                        <label>メールアドレス</label>
-                        <input type="email" id="edit-email" class="form-control" readonly>
-                        <small>※ メールアドレスは変更できません</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>氏名</label>
-                        <input type="text" id="edit-fullname" class="form-control" 
-                               placeholder="山田太郎">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>ロール *</label>
-                        <select id="edit-role" class="form-control" required>
-                            <option value="company_user">一般ユーザー</option>
-                            <option value="company_admin">企業管理者</option>
-                        </select>
-                    </div>
-                    
-                    <div class="modal-actions">
-                        <button type="button" class="btn btn-secondary" onclick="closeEditUserModal()">
-                            キャンセル
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            💾 保存
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- JavaScript -->
-    <script src="js/admin.js"></script>
-    <script src="js/admin-users.js?v=20260301a"></script>
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Config -->
+    <script src="js/config.js?v=20260228k"></script>
+    
+    <!-- Auth -->
+    <script src="js/auth-supabase.js?v=20260317005"></script>
+    
+    <!-- Admin Users Script -->
+    <script src="js/admin-users.js"></script>
 </body>
 </html>
