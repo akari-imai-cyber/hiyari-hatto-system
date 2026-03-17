@@ -61,6 +61,23 @@ body {
     align-items: flex-start;
     gap: 1rem;
 }
+/* トップページに戻るリンク */
+.back-to-top {
+    color: white;
+    text-decoration: none;
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 0.5rem;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.back-to-top:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+
 
 .logo {
     font-size: 1.25rem;
