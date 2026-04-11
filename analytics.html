@@ -33,51 +33,11 @@
     })();
     </script>
     
-    <!-- ユーザー情報表示 -->
-    <script>
-    window.addEventListener('authComplete', function(e) {
-        const auth = e.detail;
-        console.log('🔍 analytics.html - 認証情報:', auth);
-        console.log('🔍 analytics.html - ロール:', auth.role);
-        
-        const userInfo = document.getElementById('user-info');
-        const displayCompany = document.getElementById('display-company');
-        const displayEmail = document.getElementById('display-email');
-        const adminReportsLink = document.getElementById('admin-reports-link');
-        const adminUsersLink = document.getElementById('admin-users-link');
-        
-        if (auth && auth.authenticated) {
-            displayCompany.textContent = auth.companyName || auth.companyCode || '企業名不明';
-            displayEmail.textContent = auth.email || 'メール不明';
-            userInfo.style.display = 'flex';
-            
-            console.log('🔍 ロールチェック:', auth.role, 'company_admin?', auth.role === 'company_admin', 'admin?', auth.role === 'admin');
-            
-            // システム管理者のみ「企業管理」リンクを表示
-            if (auth.role === 'admin') {
-                const adminLink = document.getElementById('admin-link');
-                if (adminLink) {
-                    adminLink.style.display = 'inline-block';
-                    console.log('✅ 企業管理リンク表示');
-                }
-            }
-            
-            // システム管理者のみ「報告管理」リンクを表示
-            if (auth.role === 'admin') {
-                console.log('✅ システム管理者: 報告管理リンク表示');
-                if (adminReportsLink) adminReportsLink.style.display = 'inline-block';
-            }
-            
-            // 企業管理者 または システム管理者の場合は「ユーザー管理」リンクを表示
-            if (auth.role === 'company_admin' || auth.role === 'admin') {
-                console.log('✅ 管理者リンク表示');
-                if (adminUsersLink) adminUsersLink.style.display = 'inline-block';
-            } else {
-                console.log('❌ 一般ユーザー - 管理者リンク非表示');
-            }
-        }
-    });
+    <!-- 共通ナビゲーション -->
+    <script src="js/common-navigation.js?v=20260411"></script>
     
+    <!-- ログアウト処理 -->
+    <script>
     async function handleLogout() {
         if (confirm('ログアウトしますか？')) {
             await window.supabaseClient.auth.signOut();
@@ -103,9 +63,11 @@
                         <a href="index.html" class="nav-link">報告入力</a>
                         <a href="dashboard.html" class="nav-link">ダッシュボード</a>
                         <a href="analytics.html" class="nav-link active">分析</a>
-                        <a href="admin.html" class="nav-link" id="admin-link" style="display: none;">企業管理</a>
-                        <a href="admin-reports.html" class="nav-link" id="admin-reports-link" style="display: none;">報告管理</a>
-                        <a href="admin-users.html" class="nav-link" id="admin-users-link" style="display: none;">ユーザー管理</a>
+                        <a href="admin.html" class="nav-link" id="admin-link">企業管理</a>
+                        <a href="admin-reports.html" class="nav-link" id="admin-reports-link">報告管理</a>
+                        <a href="admin-users.html" class="nav-link" id="admin-users-link">ユーザー管理</a>
+                        <a href="import-data.html" class="nav-link" id="import-data-link">📥 データインポート</a>
+                        <a href="admin-data-fix.html" class="nav-link" id="data-fix-link">🔧 データ修正</a>
                     </nav>
                 </div>
             </div>

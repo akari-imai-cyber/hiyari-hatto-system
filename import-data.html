@@ -258,6 +258,62 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/auth-supabase.js"></script>
+    
+    <!-- 認証完了後の処理 -->
+    <script>
+    window.addEventListener('authComplete', (event) => {
+        const auth = event.detail;
+        console.log('✅ import-data.html: authComplete イベント受信', auth);
+        
+        // ユーザー情報表示
+        const userInfoPanel = document.getElementById('user-info');
+        const companyNameEl = document.getElementById('display-company');
+        const userEmailEl = document.getElementById('display-email');
+        
+        if (userInfoPanel) userInfoPanel.style.display = 'flex';
+        if (companyNameEl) companyNameEl.textContent = auth.companyName || '管理者';
+        if (userEmailEl) userEmailEl.textContent = auth.email || '';
+        
+        // ナビゲーション制御
+        const adminLink = document.getElementById('admin-link');
+        const adminReportsLink = document.getElementById('admin-reports-link');
+        const adminUsersLink = document.getElementById('admin-users-link');
+        const importDataLink = document.getElementById('import-data-link');
+        const dataFixLink = document.getElementById('data-fix-link');
+        
+        if (auth.role === 'admin') {
+            // admin: すべて表示 ①②③④⑤⑥⑦⑧
+            if (adminLink) adminLink.style.display = 'inline-block';
+            if (adminReportsLink) adminReportsLink.style.display = 'inline-block';
+            if (adminUsersLink) adminUsersLink.style.display = 'inline-block';
+            if (importDataLink) importDataLink.style.display = 'inline-block';
+            if (dataFixLink) dataFixLink.style.display = 'inline-block';
+        } else if (auth.role === 'company_admin') {
+            // company_admin: ④⑤を非表示 ①②③⑥⑦⑧
+            if (adminLink) adminLink.style.display = 'none';
+            if (adminReportsLink) adminReportsLink.style.display = 'none';
+            if (adminUsersLink) adminUsersLink.style.display = 'inline-block';
+            if (importDataLink) importDataLink.style.display = 'inline-block';
+            if (dataFixLink) dataFixLink.style.display = 'inline-block';
+        } else {
+            // company_user: ①②③のみ表示
+            if (adminLink) adminLink.style.display = 'none';
+            if (adminReportsLink) adminReportsLink.style.display = 'none';
+            if (adminUsersLink) adminUsersLink.style.display = 'none';
+            if (importDataLink) importDataLink.style.display = 'none';
+            if (dataFixLink) dataFixLink.style.display = 'none';
+        }
+    });
+    
+    async function handleLogout() {
+        if (confirm('ログアウトしますか？')) {
+            await window.supabaseClient.auth.signOut();
+            alert('ログアウトしました');
+            window.location.href = 'landing.html';
+        }
+    }
+    </script>
+    
     <script src="js/import-data.js"></script>
 </body>
 </html>
