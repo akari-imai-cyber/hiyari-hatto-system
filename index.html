@@ -17,15 +17,14 @@
     <script src="js/config.js?v=20260228k"></script>
     
     <!-- 共通ナビゲーション -->
-    <script src="js/common-navigation.js?v=20260411b"></script>
+    <script src="js/common-navigation.js?v=20260411e"></script>
     
     <!-- ログアウト処理 -->
     <script>
     async function handleLogout() {
         if (confirm('ログアウトしますか？')) {
             await window.supabaseClient.auth.signOut();
-            alert('ログアウトしました');
-            location.reload();
+            window.location.href = 'landing.html';
         }
     }
     </script>
