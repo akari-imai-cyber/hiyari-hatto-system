@@ -406,7 +406,21 @@ function updatePreview(fieldKey) {
         return;
     }
     
-    const sampleValue = excelData[0][excelColumn];
+    let sampleValue = excelData[0][excelColumn];
+    
+    // 発生日時フィールドの場合、Excel日付を変換してプレビュー
+    if (fieldKey === 'occurred_at' && sampleValue) {
+        if (typeof sampleValue === 'number') {
+            // Excel日付シリアル値を変換
+            try {
+                const date = XLSX.SSF.parse_date_code(sampleValue);
+                sampleValue = `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')} ${String(date.H).padStart(2, '0')}:${String(date.M).padStart(2, '0')}:00`;
+            } catch (e) {
+                console.warn('日付変換エラー:', sampleValue);
+            }
+        }
+    }
+    
     preview.textContent = sampleValue ? String(sampleValue).substring(0, 50) : '(空)';
 }
 
@@ -430,7 +444,19 @@ function previewData() {
         Object.keys(mapping).forEach(key => {
             const excelCol = mapping[key];
             if (excelCol) {
-                mapped[key] = row[excelCol];
+                let value = row[excelCol];
+                
+                // 発生日時フィールドの場合、Excel日付を変換
+                if (key === 'occurred_at' && typeof value === 'number') {
+                    try {
+                        const date = XLSX.SSF.parse_date_code(value);
+                        value = `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')} ${String(date.H).padStart(2, '0')}:${String(date.M).padStart(2, '0')}:00`;
+                    } catch (e) {
+                        console.warn('日付変換エラー:', value);
+                    }
+                }
+                
+                mapped[key] = value;
             }
         });
         return mapped;
