@@ -49,7 +49,33 @@
 
 ---
 
-## ✨ 最新更新（2026年3月10日）
+## ✨ 最新更新（2026年4月11日）
+
+### 1. ナビゲーションメニューの統一 🧭 **NEW!**
+
+すべてのページでロール（権限）に応じた正しいナビゲーションメニューが表示されるようになりました。
+
+**修正内容:**
+- ✅ **8つの全ページでナビゲーション統一**: index.html, dashboard.html, analytics.html, admin.html, admin-reports.html, admin-users.html, import-data.html, admin-data-fix.html
+- ✅ **ロール別の表示制御を実装**:
+  - **admin（システム管理者）**: ①報告入力 ②ダッシュボード ③分析 ④企業管理 ⑤報告管理 ⑥ユーザー管理 ⑦データインポート ⑧データ修正 - **すべて表示**
+  - **company_admin（企業管理者）**: ④企業管理と⑤報告管理を非表示 → ①②③⑥⑦⑧ を表示
+  - **company_user（一般ユーザー）**: ①②③のみ表示
+- ✅ **⑦⑧ページでログイン情報を表示**: import-data.html と admin-data-fix.html にユーザー情報パネルを追加
+- ✅ **common-navigation.js を活用**: 統一されたナビゲーション管理ロジックですべてのページを制御
+
+**影響範囲:**
+- `index.html` - ナビゲーションHTMLのinline style削除
+- `dashboard.html` - ナビゲーションHTMLのinline style削除
+- `analytics.html` - ナビゲーションHTMLのinline style削除
+- `admin.html` - 独自構造のため変更なし（全メニュー表示）
+- `admin-reports.html` - ナビゲーションHTMLのinline style削除
+- `admin-users.html` - ナビゲーションHTMLのinline style削除
+- `import-data.html` - authCompleteイベントリスナー追加、ユーザー情報表示実装
+- `admin-data-fix.html` - authCompleteイベントリスナー追加、ユーザー情報表示実装
+- `js/common-navigation.js` - コメント改善（権限設定を明確化）
+
+**以前の更新（2026年3月10日）**
 
 ### 1. ブランド名を「ヒヤリハットナビ」に変更 🎉 **NEW!**
 
