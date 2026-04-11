@@ -259,6 +259,21 @@
     <script src="js/config.js"></script>
     <script src="js/auth-supabase.js"></script>
     
+    <!-- 認証チェック実行 -->
+    <script>
+    (async function() {
+        // Supabaseクライアント初期化を待つ
+        if (typeof initializeApp === 'function') {
+            initializeApp();
+        }
+        
+        const authenticated = await checkAuthentication();
+        if (!authenticated) {
+            // アクセス拒否の場合は処理が中断される
+        }
+    })();
+    </script>
+    
     <!-- 認証完了後の処理 -->
     <script>
     window.addEventListener('authComplete', (event) => {
