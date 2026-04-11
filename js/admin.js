@@ -779,6 +779,24 @@ async function displayAdminInfo() {
             }
             if (adminUserInfo) {
                 adminUserInfo.style.display = 'flex';
+                
+                // 🔑パスワード変更ボタンを追加（まだ存在しない場合）
+                if (!document.getElementById('admin-change-password-btn')) {
+                    const changePasswordBtn = document.createElement('a');
+                    changePasswordBtn.id = 'admin-change-password-btn';
+                    changePasswordBtn.href = 'change-password.html';
+                    changePasswordBtn.className = 'btn-change-password';
+                    changePasswordBtn.textContent = '🔑';
+                    changePasswordBtn.title = 'パスワード変更';
+                    
+                    // ログアウトボタンの前に挿入
+                    const logoutBtn = adminUserInfo.querySelector('.btn-admin-logout');
+                    if (logoutBtn) {
+                        adminUserInfo.insertBefore(changePasswordBtn, logoutBtn);
+                    } else {
+                        adminUserInfo.appendChild(changePasswordBtn);
+                    }
+                }
             }
         }
     } catch (error) {
