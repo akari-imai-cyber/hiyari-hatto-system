@@ -234,12 +234,24 @@ async function handleFile(file) {
 // ファイル読み込み
 function readFile(file) {
     return new Promise((resolve, reject) => {
+        const fileName = file.name;
+        const fileExt = fileName.split('.').pop().toLowerCase();
         const reader = new FileReader();
         
         reader.onload = (e) => {
             try {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
+                let workbook;
+                
+                if (fileExt === 'csv') {
+                    // CSVの場合：テキストとして読み込み（文字化け対策）
+                    const text = e.target.result;
+                    console.log('📄 CSV読み込み（UTF-8）:', text.substring(0, 100));
+                    workbook = XLSX.read(text, { type: 'string', raw: false });
+                } else {
+                    // Excel（.xlsx, .xls）の場合：バイナリで読み込み
+                    const data = new Uint8Array(e.target.result);
+                    workbook = XLSX.read(data, { type: 'array' });
+                }
                 
                 // 最初のシートを取得
                 const firstSheetName = workbook.SheetNames[0];
@@ -248,8 +260,14 @@ function readFile(file) {
                 // JSONに変換
                 const jsonData = XLSX.utils.sheet_to_json(worksheet);
                 
+                console.log('✅ JSON変換完了:', jsonData.length, '件');
+                if (jsonData.length > 0) {
+                    console.log('サンプルデータ:', jsonData[0]);
+                }
+                
                 resolve(jsonData);
             } catch (error) {
+                console.error('❌ ファイル解析エラー:', error);
                 reject(error);
             }
         };
@@ -258,7 +276,12 @@ function readFile(file) {
             reject(new Error('ファイル読み込みエラー'));
         };
         
-        reader.readAsArrayBuffer(file);
+        // CSVの場合はテキストとして読み込み、それ以外はバイナリ
+        if (fileExt === 'csv') {
+            reader.readAsText(file, 'UTF-8');
+        } else {
+            reader.readAsArrayBuffer(file);
+        }
     });
 }
 
