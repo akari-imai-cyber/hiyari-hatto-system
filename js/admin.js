@@ -1,5 +1,5 @@
 // ============================================
-// 企業管理画面
+// 企業管理画面 v20260411c
 // ============================================
 
 let allCompanies = [];
@@ -771,30 +771,34 @@ async function displayAdminInfo() {
     try {
         const { data: { session } } = await window.supabaseClient.auth.getSession();
         if (session) {
-            const adminUserInfo = document.getElementById('admin-user-info');
-            const adminEmailDisplay = document.getElementById('admin-display-email');
+            const userInfo = document.getElementById('user-info');
+            const displayCompany = document.getElementById('display-company');
+            const displayEmail = document.getElementById('display-email');
             
-            if (adminEmailDisplay) {
-                adminEmailDisplay.textContent = session.user.email || 'メール不明';
+            if (displayCompany) {
+                displayCompany.textContent = '管理者';
             }
-            if (adminUserInfo) {
-                adminUserInfo.style.display = 'flex';
+            if (displayEmail) {
+                displayEmail.textContent = session.user.email || 'メール不明';
+            }
+            if (userInfo) {
+                userInfo.style.display = 'flex';
                 
                 // 🔑パスワード変更ボタンを追加（まだ存在しない場合）
-                if (!document.getElementById('admin-change-password-btn')) {
+                if (!document.getElementById('change-password-btn')) {
                     const changePasswordBtn = document.createElement('a');
-                    changePasswordBtn.id = 'admin-change-password-btn';
+                    changePasswordBtn.id = 'change-password-btn';
                     changePasswordBtn.href = 'change-password.html';
                     changePasswordBtn.className = 'btn-change-password';
                     changePasswordBtn.textContent = '🔑';
                     changePasswordBtn.title = 'パスワード変更';
                     
                     // ログアウトボタンの前に挿入
-                    const logoutBtn = adminUserInfo.querySelector('.btn-admin-logout');
+                    const logoutBtn = userInfo.querySelector('.btn-logout');
                     if (logoutBtn) {
-                        adminUserInfo.insertBefore(changePasswordBtn, logoutBtn);
+                        userInfo.insertBefore(changePasswordBtn, logoutBtn);
                     } else {
-                        adminUserInfo.appendChild(changePasswordBtn);
+                        userInfo.appendChild(changePasswordBtn);
                     }
                 }
             }
