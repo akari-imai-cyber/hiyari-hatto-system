@@ -27,7 +27,15 @@ const systemFields = [
 
 // ページ初期化
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('インポートページ初期化');
+    console.log('📋 インポートページ初期化開始');
+    
+    // XLSXライブラリの確認
+    if (typeof XLSX === 'undefined') {
+        console.error('❌ XLSXライブラリが読み込まれていません');
+        alert('システムエラー: Excelライブラリの読み込みに失敗しました。\n\nページをリロード(Ctrl+F5)してください。');
+        return;
+    }
+    console.log('✅ XLSXライブラリ確認完了');
     
     // Supabaseクライアント初期化を待つ
     if (typeof initializeApp === 'function') {
@@ -53,24 +61,35 @@ document.addEventListener('DOMContentLoaded', async function() {
     // 認証チェック
     const isAuthenticated = await checkAuthentication();
     if (!isAuthenticated) {
+        console.log('❌ 認証失敗: ログインページへリダイレクト');
         window.location.href = 'index.html';
         return;
     }
     
     const auth = getCurrentAuth();
+    console.log('✅ 認証情報:', auth);
+    
     if (!auth || (auth.role !== 'admin' && auth.role !== 'company_admin')) {
         alert('この機能は管理者のみ利用できます');
         window.location.href = 'dashboard.html';
         return;
     }
     
-    document.getElementById('user-display').textContent = auth.email;
+    // user-displayは存在しないため削除
+    // document.getElementById('user-display').textContent = auth.email;
     
     // ドラッグ&ドロップ設定
+    console.log('🔧 ドラッグ&ドロップ設定中...');
     setupDragAndDrop();
     
     // ファイル選択イベント
-    document.getElementById('file-input').addEventListener('change', handleFileSelect);
+    const fileInput = document.getElementById('file-input');
+    if (fileInput) {
+        fileInput.addEventListener('change', handleFileSelect);
+        console.log('✅ ファイル選択イベント設定完了');
+    } else {
+        console.error('❌ file-input要素が見つかりません');
+    }
     
     console.log('✅ インポートページ初期化完了');
 });
@@ -79,48 +98,84 @@ document.addEventListener('DOMContentLoaded', async function() {
 function setupDragAndDrop() {
     const uploadArea = document.getElementById('upload-area');
     
+    if (!uploadArea) {
+        console.error('❌ upload-area要素が見つかりません');
+        return;
+    }
+    
+    console.log('✅ upload-area要素確認完了');
+    
     uploadArea.addEventListener('dragover', (e) => {
         e.preventDefault();
         uploadArea.classList.add('dragover');
+        console.log('📋 ドラッグオーバー');
     });
     
     uploadArea.addEventListener('dragleave', () => {
         uploadArea.classList.remove('dragover');
+        console.log('📋 ドラッグリーブ');
     });
     
     uploadArea.addEventListener('drop', (e) => {
         e.preventDefault();
         uploadArea.classList.remove('dragover');
+        console.log('📋 ドロップイベント発火');
         
         const files = e.dataTransfer.files;
+        console.log('ドロップされたファイル数:', files.length);
         if (files.length > 0) {
+            console.log('ファイル情報:', {
+                name: files[0].name,
+                size: files[0].size,
+                type: files[0].type
+            });
             handleFile(files[0]);
+        } else {
+            console.warn('⚠️ ドロップされたファイルがありません');
         }
     });
+    
+    console.log('✅ ドラッグ&ドロップイベント設定完了');
 }
 
 // ファイル選択ハンドラ
 function handleFileSelect(e) {
+    console.log('📁 ファイル選択イベント発火');
     const files = e.target.files;
+    console.log('選択されたファイル数:', files.length);
     if (files.length > 0) {
+        console.log('ファイル情報:', {
+            name: files[0].name,
+            size: files[0].size,
+            type: files[0].type
+        });
         handleFile(files[0]);
+    } else {
+        console.warn('⚠️ ファイルが選択されていません');
     }
 }
 
 // ファイル処理
 async function handleFile(file) {
-    console.log('ファイル処理開始:', file.name);
+    console.log('🔄 ファイル処理開始:', file.name);
     
     const fileName = file.name;
     const fileExt = fileName.split('.').pop().toLowerCase();
     
+    console.log('ファイル拡張子:', fileExt);
+    
     if (!['xlsx', 'xls', 'csv'].includes(fileExt)) {
+        console.error('❌ 対応していないファイル形式:', fileExt);
         alert('対応していないファイル形式です。Excel (.xlsx, .xls) または CSV (.csv) ファイルを選択してください。');
         return;
     }
     
+    console.log('✅ ファイル形式チェックOK');
+    
     try {
+        console.log('📖 ファイル読み込み開始...');
         const data = await readFile(file);
+        console.log('📖 ファイル読み込み完了。データ件数:', data ? data.length : 0);
         excelData = data;
         
         if (!data || data.length === 0) {
@@ -433,67 +488,86 @@ async function importData() {
     let errorCount = 0;
     const errors = [];
     
-    console.log(`=== 一括インポート開始: ${excelData.length} 件 ===`);
+    // バッチサイズ（Supabase レート制限: 10件/分）
+    const BATCH_SIZE = 10;
+    const BATCH_DELAY = 6000; // 6秒待機（10件/分 = 6秒/件のペース）
+    const totalBatches = Math.ceil(excelData.length / BATCH_SIZE);
     
-    // 全データを変換
-    const allIncidents = [];
+    console.log(`=== スマートバッチ処理開始 ===`);
+    console.log(`総件数: ${excelData.length} 件`);
+    console.log(`バッチ数: ${totalBatches} バッチ（各 ${BATCH_SIZE} 件まで）`);
+    console.log(`推定所要時間: 約 ${Math.ceil(totalBatches * BATCH_DELAY / 1000)} 秒`);
     
-    progressFill.textContent = 'データ変換中...';
-    
-    for (let i = 0; i < excelData.length; i++) {
-        const row = excelData[i];
+    for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+        const startIndex = batchIndex * BATCH_SIZE;
+        const endIndex = Math.min(startIndex + BATCH_SIZE, excelData.length);
+        const batchRows = excelData.slice(startIndex, endIndex);
         
-        try {
-            // データ変換
-            const incident = convertToIncident(row, mapping, auth);
-            allIncidents.push(incident);
-        } catch (error) {
-            console.error(`行 ${i + 1} の変換エラー:`, error);
-            errors.push({ row: i + 1, error: error.message });
-            errorCount++;
+        console.log(`\nバッチ ${batchIndex + 1}/${totalBatches}: 行 ${startIndex + 1}〜${endIndex}`);
+        
+        // バッチ内のデータを変換
+        const batchIncidents = [];
+        
+        for (let i = 0; i < batchRows.length; i++) {
+            const rowIndex = startIndex + i;
+            const row = batchRows[i];
+            
+            try {
+                // データ変換
+                const incident = convertToIncident(row, mapping, auth);
+                batchIncidents.push(incident);
+            } catch (error) {
+                console.error(`行 ${rowIndex + 1} の変換エラー:`, error);
+                errors.push({ row: rowIndex + 1, error: error.message });
+                errorCount++;
+            }
         }
         
-        // 進行状況更新（変換フェーズ: 0〜50%）
-        const progress = Math.round((i + 1) / excelData.length * 50);
-        progressFill.style.width = progress + '%';
-        progressFill.textContent = `変換中... ${progress}%`;
-    }
-    
-    console.log(`✅ データ変換完了: ${allIncidents.length} 件`);
-    
-    // 一括登録
-    if (allIncidents.length > 0) {
-        try {
-            progressFill.style.width = '50%';
-            progressFill.textContent = 'データベースに登録中...';
-            
-            console.log('Supabase に一括登録開始...');
-            
-            const { data, error } = await window.supabaseClient
-                .from('incidents')
-                .insert(allIncidents)
-                .select();
-            
-            if (error) {
-                throw error;
+        // バッチ一括登録
+        if (batchIncidents.length > 0) {
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('incidents')
+                    .insert(batchIncidents)
+                    .select();
+                
+                if (error) {
+                    throw error;
+                }
+                
+                successCount += batchIncidents.length;
+                console.log(`✅ バッチ ${batchIndex + 1} 成功: ${batchIncidents.length} 件`);
+                
+            } catch (error) {
+                console.error(`❌ バッチ ${batchIndex + 1} 登録エラー:`, error);
+                
+                // エラーを記録
+                for (let i = 0; i < batchIncidents.length; i++) {
+                    const rowIndex = startIndex + i;
+                    errorCount++;
+                    errors.push({ row: rowIndex + 1, error: error.message });
+                }
             }
-            
-            successCount = allIncidents.length;
-            console.log(`✅ 一括登録成功: ${successCount} 件`);
-            
-            // 進行状況更新（登録完了: 100%）
-            progressFill.style.width = '100%';
-            progressFill.textContent = '100%';
-            
-        } catch (error) {
-            console.error('❌ 一括登録エラー:', error);
-            console.log('エラー詳細:', error.message);
-            
-            // 一括登録が失敗した場合のメッセージ
-            alert(`一括登録に失敗しました。\n\nエラー: ${error.message}\n\n10件ずつに分けて再試行することをお勧めします。`);
-            
-            errorCount = allIncidents.length;
-            errors.push({ row: 'すべて', error: error.message });
+        }
+        
+        // 進行状況更新
+        const progress = Math.round((endIndex / excelData.length) * 100);
+        progressFill.style.width = progress + '%';
+        
+        // 残り時間を計算
+        const remainingBatches = totalBatches - batchIndex - 1;
+        const remainingSeconds = Math.ceil(remainingBatches * BATCH_DELAY / 1000);
+        
+        if (remainingBatches > 0) {
+            progressFill.textContent = `${progress}% (残り約 ${remainingSeconds} 秒)`;
+        } else {
+            progressFill.textContent = `${progress}%`;
+        }
+        
+        // 次のバッチまで待機（最後のバッチ以外）
+        if (batchIndex < totalBatches - 1) {
+            console.log(`⏳ ${BATCH_DELAY / 1000} 秒待機中...`);
+            await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
         }
     }
     
