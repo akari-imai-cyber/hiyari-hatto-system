@@ -105,35 +105,33 @@
     </script>
 </head>
 <body>
-    <!-- ナビゲーション -->
-    <nav class="main-nav">
-        <div class="nav-container">
-            <div class="nav-logo">
-                <span class="logo-icon">🚛</span>
-                <span class="logo-text">ヒヤリハット報告システム</span>
-            </div>
-            <div class="nav-right">
-                <div id="admin-user-info" class="admin-user-info" style="display: none;">
-                    <span class="admin-label">👤 管理者:</span>
-                    <span class="admin-email" id="admin-display-email">読み込み中...</span>
-                    <button class="btn-admin-logout" onclick="adminLogout()" title="ログアウト">🚪</button>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <a href="landing.html" class="back-to-top">← トップページに戻る</a>
+                <h1 class="logo">🚛 ヒヤリハットナビ</h1>
+                <div class="header-right">
+                    <div id="user-info" class="user-info" style="display: none;">
+                        <span class="user-company" id="display-company">読み込み中...</span>
+                        <span class="user-email" id="display-email">読み込み中...</span>
+                        <button class="btn-logout" onclick="adminLogout()" title="ログアウト">🚪</button>
+                    </div>
+                    <nav class="nav">
+                        <a href="index.html" class="nav-link">報告入力</a>
+                        <a href="dashboard.html" class="nav-link">ダッシュボード</a>
+                        <a href="analytics.html" class="nav-link">分析</a>
+                        <a href="admin.html" class="nav-link active">企業管理</a>
+                        <a href="admin-reports.html" class="nav-link">報告管理</a>
+                        <a href="admin-users.html" class="nav-link">ユーザー管理</a>
+                        <a href="import-data.html" class="nav-link">📥 データインポート</a>
+                        <a href="admin-data-fix.html" class="nav-link">🔧 データ修正</a>
+                    </nav>
                 </div>
-                <div class="nav-links">
-                    <a href="index.html">報告入力</a>
-                    <a href="dashboard.html">ダッシュボード</a>
-                    <a href="analytics.html">分析</a>
-                    <a href="admin.html" class="active">企業管理</a>
-                    <a href="admin-reports.html">報告管理</a>
-                    <a href="admin-users.html">ユーザー管理</a>
-                    <a href="import-data.html">📥 データインポート</a>
-                    <a href="admin-data-fix.html">🔧 データ修正</a>
-                </div>
             </div>
-        </div>
-    </nav>
+        </header>
 
-    <!-- メインコンテンツ -->
-    <div class="admin-container">
+        <main class="main-content">
+            <div class="admin-container">
         <!-- ヘッダー -->
         <div class="admin-header">
             <h1>🏢 企業管理画面</h1>
@@ -196,6 +194,8 @@
                 </tbody>
             </table>
         </div>
+            </div>
+        </main>
     </div>
 
     <!-- 企業追加モーダル -->
@@ -329,6 +329,6 @@
     </div>
 
     <!-- JavaScript -->
-    <script src="js/admin.js?v=20260411b"></script>
+    <script src="js/admin.js?v=20260411c"></script>
 </body>
 </html>
