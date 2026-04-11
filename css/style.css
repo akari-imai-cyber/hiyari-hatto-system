@@ -61,6 +61,7 @@ body {
     align-items: flex-start;
     gap: 1rem;
 }
+
 /* トップページに戻るリンク */
 .back-to-top {
     color: white;
@@ -77,12 +78,12 @@ body {
     background: rgba(255, 255, 255, 0.25);
 }
 
-
-
 .logo {
     font-size: 1.25rem;
     font-weight: 700;
     margin: 0;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .header-right {
