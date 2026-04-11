@@ -1,6 +1,11 @@
 /**
- * 共通ナビゲーション管理システム
+ * 共通ナビゲーション管理システム v20260411e
  * 全HTMLページで使用される統一されたメニュー表示ロジック
+ * 
+ * 機能:
+ * - ロール別メニュー表示制御
+ * - パスワード変更ボタン自動追加
+ * - authCompleteイベントのフォールバック処理
  */
 
 (function() {
@@ -140,7 +145,10 @@
     /**
      * authComplete イベントリスナー
      */
+    let authCompleteReceived = false;
+    
     window.addEventListener('authComplete', function(e) {
+        authCompleteReceived = true;
         const auth = e.detail;
         console.log('🔐 [Navigation] authComplete イベント受信:', auth);
 
@@ -150,6 +158,26 @@
         // ナビゲーションメニュー表示
         updateNavigationMenu(auth);
     });
+
+    // フォールバック：5秒後にauthCompleteイベントが来ていなければ警告
+    setTimeout(function() {
+        if (!authCompleteReceived) {
+            console.warn('⚠️ [Navigation] authCompleteイベントが5秒以内に受信されませんでした');
+            console.warn('⚠️ [Navigation] 認証システムを確認してください');
+            
+            // 緊急フォールバック：getCurrentAuth() を試す
+            if (typeof getCurrentAuth === 'function') {
+                const auth = getCurrentAuth();
+                if (auth && auth.authenticated) {
+                    console.log('🔧 [Navigation] getCurrentAuth() からフォールバック実行');
+                    updateUserInfo(auth);
+                    updateNavigationMenu(auth);
+                } else {
+                    console.error('❌ [Navigation] 認証情報が取得できません');
+                }
+            }
+        }
+    }, 5000);
 
     console.log('✅ common-navigation.js 初期化完了');
 })();
