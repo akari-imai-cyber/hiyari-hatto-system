@@ -75,12 +75,18 @@ async function loadUsers() {
     try {
         const supabaseClient = window.supabaseClient || window.supabase;
         
-        // profiles テーブルからユーザーを取得
-        const { data: users, error } = await supabaseClient
-            .from('profiles')
-            .select('*')
-            .eq('company_id', currentCompanyId)
-            .order('created_at', { ascending: false });
+    // profiles テーブルからユーザーを取得
+let query = supabaseClient
+    .from('profiles')
+    .select('*');
+
+// admin でない場合のみ company_id でフィルタリング
+if (currentUserRole !== 'admin' && currentCompanyId) {
+    query = query.eq('company_id', currentCompanyId);
+}
+
+const { data: users, error } = await query.order('created_at', { ascending: false });
+
         
         if (error) throw error;
         
