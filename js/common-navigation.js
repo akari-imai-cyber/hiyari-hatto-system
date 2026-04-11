@@ -113,6 +113,25 @@
         if (displayEmail) {
             displayEmail.textContent = auth.email || 'メール不明';
         }
+        
+        // パスワード変更ボタンを追加（まだ存在しない場合）
+        if (userInfo && !document.getElementById('change-password-btn')) {
+            const changePasswordBtn = document.createElement('a');
+            changePasswordBtn.id = 'change-password-btn';
+            changePasswordBtn.href = 'change-password.html';
+            changePasswordBtn.className = 'btn-change-password';
+            changePasswordBtn.textContent = '🔑';
+            changePasswordBtn.title = 'パスワード変更';
+            
+            // ログアウトボタンの前に挿入
+            const logoutBtn = userInfo.querySelector('.btn-logout');
+            if (logoutBtn) {
+                userInfo.insertBefore(changePasswordBtn, logoutBtn);
+            } else {
+                userInfo.appendChild(changePasswordBtn);
+            }
+        }
+        
         if (userInfo) {
             userInfo.style.display = 'flex';
         }
