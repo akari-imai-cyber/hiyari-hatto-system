@@ -103,37 +103,40 @@ async function loadReports() {
 }
 
 // サマリー更新
-function updateSummary() {
+function updateSummary(reportsToUse = null) {
     const now = new Date();
     const thisMonth = now.getMonth();
     const thisYear = now.getFullYear();
     
+    // フィルタ済みデータがあればそれを使用、なければ全データ
+    const reports = reportsToUse || (filteredReports.length > 0 ? filteredReports : allReports);
+    
     console.log('=== サマリー更新 ===');
-    console.log('allReports:', allReports);
+    console.log('使用データ:', reports.length, '件');
     
     // 総報告数
-    document.getElementById('total-reports').textContent = allReports.length;
+    document.getElementById('total-reports').textContent = reports.length;
     
     // 未確認（status が step1_complete または pending）
-    const pending = allReports.filter(r => r.status === 'pending' || r.status === 'step1_complete').length;
+    const pending = reports.filter(r => r.status === 'pending' || r.status === 'step1_complete').length;
     document.getElementById('pending-reports').textContent = pending;
     
     // 重大度★★★以上（severity または severity_rating）
-    const highSeverity = allReports.filter(r => {
+    const highSeverity = reports.filter(r => {
         const sev = r.severity || r.severity_rating || 0;
         return sev >= 3;
     }).length;
     document.getElementById('high-severity').textContent = highSeverity;
     
     // 今月の完了（status が completed または step2_complete）
-    const completed = allReports.filter(r => {
+    const completed = reports.filter(r => {
         if ((r.status !== 'completed' && r.status !== 'step2_complete') || !r.updated_at) return false;
         const date = new Date(r.updated_at);
         return date.getMonth() === thisMonth && date.getFullYear() === thisYear;
     }).length;
     document.getElementById('completed-reports').textContent = completed;
     
-    console.log('総報告数:', allReports.length);
+    console.log('総報告数:', reports.length);
     console.log('未確認:', pending);
     console.log('重大度高:', highSeverity);
     console.log('今月完了:', completed);
@@ -657,9 +660,12 @@ function applyAdvancedFilter() {
             return false;
         }
         
-        // 重大度フィルタ
-        if (severityFilter && String(report.severity_rating) !== severityFilter) {
-            return false;
+        // 重大度フィルタ（severity または severity_rating）
+        if (severityFilter) {
+            const severity = String(report.severity || report.severity_rating || '');
+            if (severity !== severityFilter) {
+                return false;
+            }
         }
         
         // 日付範囲フィルタ（開始日）
@@ -698,8 +704,8 @@ function applyAdvancedFilter() {
     // テーブルを再描画
     displayReports(filteredReports);
     
-    // サマリーカードを更新
-    updateSummary();
+    // サマリーカードを更新（フィルタ後のデータを渡す）
+    updateSummary(filteredReports);
     
     // フィルタが適用されたことを通知
     const activeFiltersCount = [statusFilter, categoryFilter, severityFilter, dateFromFilter, dateToFilter, reporterFilter].filter(f => f).length;
@@ -723,8 +729,8 @@ function resetAllFilters() {
     // テーブルを再描画
     displayReports(allReports);
     
-    // サマリーカードを更新
-    updateSummary();
+    // サマリーカードを更新（全データを渡す）
+    updateSummary(allReports);
     
     console.log('🔄 フィルタをリセットしました');
     showToast('🔄 フィルタをリセットしました');
