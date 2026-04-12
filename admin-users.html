@@ -227,7 +227,7 @@
                 <input 
                     type="text" 
                     id="search-input" 
-                    placeholder="🔍 メールアドレスで検索..." 
+                    placeholder="🔍 氏名・メール・所属で検索..." 
                     class="form-control"
                     style="flex: 1; min-width: 250px;"
                     oninput="filterUsers()"
@@ -252,7 +252,9 @@
             <table>
                 <thead>
                     <tr>
+                        <th>氏名</th>
                         <th>メールアドレス</th>
+                        <th>所属/部署</th>
                         <th>ロール</th>
                         <th>登録日</th>
                         <th>操作</th>
@@ -260,7 +262,7 @@
                 </thead>
                 <tbody id="users-table-body">
                     <tr>
-                        <td colspan="4" style="text-align: center; padding: 2rem;">読み込み中...</td>
+                        <td colspan="6" style="text-align: center; padding: 2rem;">読み込み中...</td>
                     </tr>
                 </tbody>
             </table>
@@ -288,9 +290,27 @@
 
             <form id="add-user-form">
                 <div class="form-group">
+                    <label for="user-name">氏名 *</label>
+                    <input type="text" id="user-name" required placeholder="例: 山田太郎">
+                    <small>ユーザー一覧に表示される名前です</small>
+                </div>
+
+                <div class="form-group">
                     <label for="user-email">メールアドレス *</label>
                     <input type="email" id="user-email" required placeholder="例: yamada@example.com">
                     <small>実際のメールアドレスでなくても構いません（例: driver001@dummy.local）</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="user-department">所属/部署</label>
+                    <input type="text" id="user-department" placeholder="例: 東京営業所、配送センター">
+                    <small>任意項目です</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="user-phone">電話番号</label>
+                    <input type="tel" id="user-phone" placeholder="例: 090-1234-5678">
+                    <small>任意項目です</small>
                 </div>
 
                 <div class="form-group">
@@ -322,14 +342,23 @@
 
             <form id="edit-user-form">
                 <div class="form-group">
+                    <label for="edit-user-name">氏名 *</label>
+                    <input type="text" id="edit-user-name" required placeholder="例: 山田太郎">
+                </div>
+
+                <div class="form-group">
                     <label for="edit-user-email">メールアドレス *</label>
                     <input type="email" id="edit-user-email" required placeholder="例: yamada@example.com">
                 </div>
 
                 <div class="form-group">
-                    <label for="edit-user-name">氏名</label>
-                    <input type="text" id="edit-user-name" placeholder="例: 山田太郎">
-                    <small>任意項目です</small>
+                    <label for="edit-user-department">所属/部署</label>
+                    <input type="text" id="edit-user-department" placeholder="例: 東京営業所">
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-user-phone">電話番号</label>
+                    <input type="tel" id="edit-user-phone" placeholder="例: 090-1234-5678">
                 </div>
 
                 <div class="form-group">
@@ -400,6 +429,6 @@
     </script>
     
     <!-- Admin Users Script -->
-    <script src="js/admin-users.js?v=20260412e"></script>
+    <script src="js/admin-users.js?v=20260412g"></script>
 </body>
 </html>
