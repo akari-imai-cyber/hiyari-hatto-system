@@ -118,7 +118,11 @@ function displayUsers(users) {
     
     tbody.innerHTML = users.map(user => `
         <tr>
-            <td><strong>${user.full_name || '未設定'}</strong></td>
+            <td>
+                <strong style="cursor: pointer; color: #2563eb; text-decoration: underline;" onclick="openDetailUserModal('${user.id}')" title="クリックで詳細表示">
+                    ${user.full_name || '未設定'}
+                </strong>
+            </td>
             <td>${user.email || '未設定'}</td>
             <td>${user.department || '-'}</td>
             <td>
@@ -330,6 +334,94 @@ document.getElementById('add-user-form')?.addEventListener('submit', async (e) =
         submitBtn.textContent = '登録する';
     }
 });
+
+// グローバル変数: 編集中・詳細表示中のユーザーID
+let editingUserId = null;
+let detailUserId = null;
+
+// ユーザー詳細モーダルを開く
+async function openDetailUserModal(userId) {
+    console.log('👤 ユーザー詳細モーダルを開く:', userId);
+    detailUserId = userId;
+    
+    try {
+        const supabaseClient = window.supabaseClient || window.supabase;
+        
+        // ユーザー情報を取得
+        const { data: user, error } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+        
+        if (error) throw error;
+        
+        console.log('📋 詳細表示ユーザー:', user);
+        
+        // このユーザーの報告件数を取得
+        const { data: reports, error: reportsError } = await supabaseClient
+            .from('reports')
+            .select('id', { count: 'exact', head: true })
+            .eq('reporter_id', userId);
+        
+        const reportCount = reportsError ? 0 : (reports || 0);
+        
+        // 基本情報を設定
+        document.getElementById('detail-full-name').textContent = user.full_name || '未設定';
+        document.getElementById('detail-email').textContent = user.email || '未設定';
+        document.getElementById('detail-department').textContent = user.department || '未設定';
+        document.getElementById('detail-phone').textContent = user.phone || '未設定';
+        
+        // ロールをバッジで表示
+        const roleElement = document.getElementById('detail-role');
+        const roleLabel = getRoleLabel(user.role);
+        const roleBadgeClass = getRoleBadgeClass(user.role);
+        roleElement.innerHTML = `<span class="badge ${roleBadgeClass}">${roleLabel}</span>`;
+        
+        // アカウント情報を設定
+        const createdAt = new Date(user.created_at);
+        const updatedAt = new Date(user.updated_at);
+        
+        document.getElementById('detail-created-at').textContent = 
+            `${createdAt.toLocaleDateString('ja-JP')} ${createdAt.toLocaleTimeString('ja-JP')}`;
+        document.getElementById('detail-updated-at').textContent = 
+            `${updatedAt.toLocaleDateString('ja-JP')} ${updatedAt.toLocaleTimeString('ja-JP')}`;
+        document.getElementById('detail-user-id').textContent = user.id || '-';
+        document.getElementById('detail-company-id').textContent = user.company_id || '未設定';
+        
+        // 報告件数を設定
+        document.getElementById('detail-report-count').textContent = `${reportCount} 件`;
+        
+        // モーダルを開く
+        const modal = document.getElementById('detail-user-modal');
+        modal.classList.add('active');
+        
+    } catch (error) {
+        console.error('❌ ユーザー詳細取得エラー:', error);
+        alert('❌ ユーザー詳細情報の取得に失敗しました。');
+    }
+}
+
+// ユーザー詳細モーダルを閉じる
+function closeDetailUserModal() {
+    const modal = document.getElementById('detail-user-modal');
+    modal.classList.remove('active');
+    detailUserId = null;
+}
+
+// 詳細モーダルから編集モーダルを開く
+function openEditUserModalFromDetail() {
+    if (!detailUserId) {
+        alert('❌ ユーザーIDが見つかりません。');
+        return;
+    }
+    
+    // 詳細モーダルを閉じる
+    closeDetailUserModal();
+    
+    // 編集モーダルを開く
+    openEditUserModal(detailUserId);
+}
 
 // グローバル変数: 編集中のユーザーID
 let editingUserId = null;
