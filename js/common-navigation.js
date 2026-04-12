@@ -25,23 +25,26 @@
             'admin-reports': false,       // ⑤報告管理（管理者のみ）
             'admin-users': false,         // ⑥ユーザー管理
             'import-data': false,         // ⑦データインポート
-            'data-fix': false             // ⑧データ修正
+            'data-fix': false,            // ⑧データ修正
+            'format-management': false    // ⑨フォーマット管理（システム管理者のみ）
         };
 
         if (role === 'admin') {
-            // システム管理者：①②③④⑤⑥⑦⑧ すべて表示
+            // システム管理者：①②③④⑤⑥⑦⑧⑨ すべて表示
             menus['admin'] = true;
             menus['admin-reports'] = true;
             menus['admin-users'] = true;
             menus['import-data'] = true;
             menus['data-fix'] = true;
+            menus['format-management'] = true;  // ⑨フォーマット管理: 表示
         } else if (role === 'company_admin') {
-            // 企業管理者：④⑤を非表示 → ①②③⑥⑦⑧ を表示
+            // 企業管理者：④⑤⑨を非表示 → ①②③⑥⑦⑧ を表示
             menus['admin'] = false;           // ④企業管理: 非表示
             menus['admin-reports'] = false;   // ⑤報告管理: 非表示
             menus['admin-users'] = true;      // ⑥ユーザー管理: 表示
             menus['import-data'] = true;      // ⑦データインポート: 表示
             menus['data-fix'] = true;         // ⑧データ修正: 表示
+            menus['format-management'] = false; // ⑨フォーマット管理: 非表示
         }
         // company_user はデフォルト（①②③のみ）
 

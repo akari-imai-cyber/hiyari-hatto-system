@@ -118,8 +118,11 @@ function displayUsers(users) {
     
     tbody.innerHTML = users.map(user => `
         <tr>
+            <td style="text-align: center;">
+                <input type="checkbox" class="user-checkbox" data-user-id="${user.id}" data-user-role="${user.role}" onchange="updateBulkActionsBar()">
+            </td>
             <td>
-                <strong style="cursor: pointer; color: #2563eb; text-decoration: underline;" onclick="openDetailUserModal('${user.id}')" title="クリックで詳細表示">
+                <strong style="cursor: pointer; color: #2563eb; text-decoration: underline;" onclick="openDetailUserModal(&quot;${user.id}&quot;)" title="クリックで詳細表示">
                     ${user.full_name || '未設定'}
                 </strong>
             </td>
@@ -132,8 +135,8 @@ function displayUsers(users) {
             </td>
             <td>${new Date(user.created_at).toLocaleDateString('ja-JP')}</td>
             <td>
-                <button class="btn btn-primary" onclick="openEditUserModal('${user.id}')" style="margin-right: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem;">編集</button>
-                ${user.role !== 'admin' ? `<button class="btn btn-danger" onclick="deleteUser('${user.id}', '${user.email}')" style="padding: 0.5rem 1rem; font-size: 0.875rem;">削除</button>` : ''}
+                <button class="btn btn-primary" onclick="openEditUserModal(&quot;${user.id}&quot;)" style="margin-right: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem;">編集</button>
+                ${user.role !== 'admin' ? `<button class="btn btn-danger" onclick="deleteUser(&quot;${user.id}&quot;, &quot;${user.email}&quot;)" style="padding: 0.5rem 1rem; font-size: 0.875rem;">削除</button>` : ''}
             </td>
         </tr>
     `).join('');
@@ -624,6 +627,163 @@ async function deleteUser(userId, userEmail) {
     } catch (error) {
         console.error('❌ ユーザー削除エラー:', error);
         alert('❌ ユーザーの削除に失敗しました。');
+    }
+}
+
+// ========================================
+// 一括操作機能
+// ========================================
+
+// 全選択/全解除
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    
+    updateBulkActionsBar();
+}
+
+// 一括操作バーの更新
+function updateBulkActionsBar() {
+    const checkboxes = document.querySelectorAll('.user-checkbox:checked');
+    const count = checkboxes.length;
+    const bar = document.getElementById('bulk-actions-bar');
+    const countElement = document.getElementById('selected-count');
+    
+    if (count > 0) {
+        bar.style.display = 'flex';
+        countElement.textContent = `${count} 件選択中`;
+    } else {
+        bar.style.display = 'none';
+    }
+    
+    // 全選択チェックボックスの状態を更新
+    const allCheckboxes = document.querySelectorAll('.user-checkbox');
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    selectAllCheckbox.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+}
+
+// 選択解除
+function clearSelection() {
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    document.getElementById('select-all-checkbox').checked = false;
+    updateBulkActionsBar();
+}
+
+// 一括削除
+async function bulkDeleteUsers() {
+    const checkboxes = document.querySelectorAll('.user-checkbox:checked');
+    const userIds = Array.from(checkboxes).map(cb => cb.dataset.userId);
+    
+    if (userIds.length === 0) {
+        alert('❌ ユーザーが選択されていません。');
+        return;
+    }
+    
+    // adminユーザーが含まれているかチェック
+    const adminCheckboxes = Array.from(checkboxes).filter(cb => cb.dataset.userRole === 'admin');
+    if (adminCheckboxes.length > 0) {
+        alert('❌ システム管理者は削除できません。選択から除外してください。');
+        return;
+    }
+    
+    if (!confirm(`選択した ${userIds.length} 件のユーザーを削除してもよろしいですか？\n\nこの操作は取り消せません。`)) {
+        return;
+    }
+    
+    try {
+        const supabaseClient = window.supabaseClient || window.supabase;
+        
+        // 一括削除
+        const { error } = await supabaseClient
+            .from('profiles')
+            .delete()
+            .in('id', userIds);
+        
+        if (error) throw error;
+        
+        alert(`✅ ${userIds.length} 件のユーザーを削除しました。`);
+        
+        // 選択解除
+        clearSelection();
+        
+        // ユーザー一覧を再読み込み
+        await loadUsers();
+        
+    } catch (error) {
+        console.error('❌ 一括削除エラー:', error);
+        alert('❌ ユーザーの削除に失敗しました。');
+    }
+}
+
+// 一括ロール変更
+async function bulkChangeRole() {
+    const checkboxes = document.querySelectorAll('.user-checkbox:checked');
+    const userIds = Array.from(checkboxes).map(cb => cb.dataset.userId);
+    
+    if (userIds.length === 0) {
+        alert('❌ ユーザーが選択されていません。');
+        return;
+    }
+    
+    // adminユーザーが含まれているかチェック
+    const adminCheckboxes = Array.from(checkboxes).filter(cb => cb.dataset.userRole === 'admin');
+    if (adminCheckboxes.length > 0) {
+        alert('❌ システム管理者のロールは変更できません。選択から除外してください。');
+        return;
+    }
+    
+    // ロールを選択
+    const newRole = prompt(`選択した ${userIds.length} 件のユーザーのロールを変更します。\n\n新しいロールを選択してください:\n\n1. company_user（一般ユーザー）\n2. company_admin（企業管理者）\n\n番号を入力してください（1 または 2）:`);
+    
+    if (!newRole) {
+        return; // キャンセル
+    }
+    
+    let roleValue;
+    if (newRole === '1') {
+        roleValue = 'company_user';
+    } else if (newRole === '2') {
+        roleValue = 'company_admin';
+    } else {
+        alert('❌ 無効な入力です。1 または 2 を入力してください。');
+        return;
+    }
+    
+    const roleLabel = roleValue === 'company_admin' ? '企業管理者' : '一般ユーザー';
+    
+    if (!confirm(`選択した ${userIds.length} 件のユーザーのロールを「${roleLabel}」に変更しますか？`)) {
+        return;
+    }
+    
+    try {
+        const supabaseClient = window.supabaseClient || window.supabase;
+        
+        // 一括ロール変更
+        const { error } = await supabaseClient
+            .from('profiles')
+            .update({ role: roleValue })
+            .in('id', userIds);
+        
+        if (error) throw error;
+        
+        alert(`✅ ${userIds.length} 件のユーザーのロールを「${roleLabel}」に変更しました。`);
+        
+        // 選択解除
+        clearSelection();
+        
+        // ユーザー一覧を再読み込み
+        await loadUsers();
+        
+    } catch (error) {
+        console.error('❌ 一括ロール変更エラー:', error);
+        alert('❌ ロールの変更に失敗しました。');
     }
 }
 
