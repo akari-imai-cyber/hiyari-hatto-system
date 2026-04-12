@@ -312,6 +312,56 @@
         </div>
     </div>
 
+    <!-- ユーザー編集モーダル -->
+    <div class="modal" id="edit-user-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>ユーザー情報を編集</h2>
+                <button class="modal-close" onclick="closeEditUserModal()">×</button>
+            </div>
+
+            <form id="edit-user-form">
+                <div class="form-group">
+                    <label for="edit-user-email">メールアドレス *</label>
+                    <input type="email" id="edit-user-email" required placeholder="例: yamada@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-user-name">氏名</label>
+                    <input type="text" id="edit-user-name" placeholder="例: 山田太郎">
+                    <small>任意項目です</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-user-role">ロール *</label>
+                    <select id="edit-user-role" required>
+                        <option value="company_user">一般ユーザー</option>
+                        <option value="company_admin">企業管理者</option>
+                        <option value="admin">システム管理者</option>
+                    </select>
+                    <small id="role-change-warning" style="display: none; color: #f59e0b;">⚠️ ロールを変更すると、アクセス権限が変更されます</small>
+                </div>
+
+                <div class="form-group" style="border-top: 1px solid #e5e7eb; padding-top: 1rem; margin-top: 1rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" id="reset-password-check" onchange="togglePasswordReset()">
+                        パスワードをリセットする
+                    </label>
+                    <div id="password-reset-section" style="display: none; margin-top: 1rem;">
+                        <label for="edit-user-password">新しいパスワード *</label>
+                        <input type="text" id="edit-user-password" placeholder="例: NewPassword123!">
+                        <small>8文字以上、英大文字・小文字・数字を含む</small>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="submit" class="btn-submit" id="edit-submit-btn" style="flex: 1;">💾 変更を保存</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditUserModal()" style="flex: 1;">キャンセル</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
@@ -350,6 +400,6 @@
     </script>
     
     <!-- Admin Users Script -->
-    <script src="js/admin-users.js?v=20260412d"></script>
+    <script src="js/admin-users.js?v=20260412e"></script>
 </body>
 </html>
