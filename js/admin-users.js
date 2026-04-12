@@ -118,7 +118,9 @@ function displayUsers(users) {
     
     tbody.innerHTML = users.map(user => `
         <tr>
+            <td><strong>${user.full_name || '未設定'}</strong></td>
             <td>${user.email || '未設定'}</td>
+            <td>${user.department || '-'}</td>
             <td>
                 <span class="badge ${getRoleBadgeClass(user.role)}">
                     ${getRoleLabel(user.role)}
@@ -153,8 +155,11 @@ function filterUsers() {
     const roleFilter = document.getElementById('role-filter').value;
     
     filteredUsers = allUsers.filter(user => {
-        // メールアドレス検索
-        const matchesSearch = !searchText || (user.email && user.email.toLowerCase().includes(searchText));
+        // 氏名・メールアドレス・所属で検索
+        const matchesSearch = !searchText || 
+            (user.email && user.email.toLowerCase().includes(searchText)) ||
+            (user.full_name && user.full_name.toLowerCase().includes(searchText)) ||
+            (user.department && user.department.toLowerCase().includes(searchText));
         
         // ロールフィルタ
         const matchesRole = !roleFilter || user.role === roleFilter;
@@ -204,13 +209,16 @@ document.getElementById('add-user-form')?.addEventListener('submit', async (e) =
     e.preventDefault();
     
     const submitBtn = document.getElementById('submit-btn');
+    const name = document.getElementById('user-name').value.trim();
     const email = document.getElementById('user-email').value.trim();
+    const department = document.getElementById('user-department').value.trim();
+    const phone = document.getElementById('user-phone').value.trim();
     const password = document.getElementById('user-password').value.trim();
     const role = document.getElementById('user-role').value;
     
     // バリデーション
-    if (!email || !password) {
-        alert('❌ すべてのフィールドを入力してください。');
+    if (!name || !email || !password) {
+        alert('❌ 氏名、メールアドレス、パスワードは必須項目です。');
         return;
     }
     
@@ -266,7 +274,10 @@ document.getElementById('add-user-form')?.addEventListener('submit', async (e) =
             .from('profiles')
             .insert({
                 id: authData.user.id,
+                full_name: name,
                 email: email,
+                department: department || null,
+                phone: phone || null,
                 role: role,
                 company_id: currentCompanyId
             })
@@ -289,6 +300,7 @@ document.getElementById('add-user-form')?.addEventListener('submit', async (e) =
         const loginInfo = document.getElementById('login-info');
         
         loginInfo.innerHTML = `
+            <p><strong>氏名:</strong> ${name}</p>
             <p><strong>メールアドレス:</strong> ${email}</p>
             <p><strong>初期パスワード:</strong> ${password}</p>
             <p><strong>ロール:</strong> ${role === 'company_admin' ? '管理者' : '一般ユーザー'}</p>
@@ -342,8 +354,10 @@ async function openEditUserModal(userId) {
         console.log('📋 編集対象ユーザー:', user);
         
         // フォームに値を設定
-        document.getElementById('edit-user-email').value = user.email || '';
         document.getElementById('edit-user-name').value = user.full_name || '';
+        document.getElementById('edit-user-email').value = user.email || '';
+        document.getElementById('edit-user-department').value = user.department || '';
+        document.getElementById('edit-user-phone').value = user.phone || '';
         document.getElementById('edit-user-role').value = user.role || 'company_user';
         
         // パスワードリセットセクションを非表示
@@ -406,15 +420,17 @@ document.getElementById('edit-user-form')?.addEventListener('submit', async (e) 
     }
     
     const submitBtn = document.getElementById('edit-submit-btn');
-    const email = document.getElementById('edit-user-email').value.trim();
     const name = document.getElementById('edit-user-name').value.trim();
+    const email = document.getElementById('edit-user-email').value.trim();
+    const department = document.getElementById('edit-user-department').value.trim();
+    const phone = document.getElementById('edit-user-phone').value.trim();
     const role = document.getElementById('edit-user-role').value;
     const resetPassword = document.getElementById('reset-password-check').checked;
     const password = document.getElementById('edit-user-password').value.trim();
     
     // バリデーション
-    if (!email || !role) {
-        alert('❌ 必須項目を入力してください。');
+    if (!name || !email || !role) {
+        alert('❌ 氏名、メールアドレス、ロールは必須項目です。');
         return;
     }
     
@@ -449,13 +465,12 @@ document.getElementById('edit-user-form')?.addEventListener('submit', async (e) 
         
         // 1. プロフィール情報を更新
         const updateData = {
+            full_name: name,
             email: email,
+            department: department || null,
+            phone: phone || null,
             role: role
         };
-        
-        if (name) {
-            updateData.full_name = name;
-        }
         
         const { error: profileError } = await supabaseClient
             .from('profiles')
