@@ -177,7 +177,8 @@ body {
 
 /* モバイル対応 */
 @media (max-width: 768px) {
-    .header-content {
+    .header-content,
+    .header-container {
         flex-direction: column;
         align-items: flex-start;
     }
