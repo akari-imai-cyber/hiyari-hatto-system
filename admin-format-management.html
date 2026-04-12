@@ -235,19 +235,6 @@
     <!-- Auth -->
     <script src="js/auth-supabase.js?v=20260317005"></script>
     
-    <!-- 認証チェック実行 -->
-    <script>
-    (async function() {
-        if (typeof initializeApp === 'function') {
-            initializeApp();
-        }
-        const authenticated = await checkAuthentication();
-        if (!authenticated) {
-            // アクセス拒否の場合は処理が中断される
-        }
-    })();
-    </script>
-    
     <!-- 共通ナビゲーション -->
     <script src="js/common-navigation.js?v=20260411e"></script>
     
@@ -260,6 +247,6 @@
     </script>
     
     <!-- Format Management Script -->
-    <script src="js/admin-format-management.js?v=20260412a"></script>
+    <script src="js/admin-format-management.js?v=20260412j"></script>
 </body>
 </html>
