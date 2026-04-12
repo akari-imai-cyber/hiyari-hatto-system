@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>フォーマット管理 - ヒヤリハットナビ</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .format-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .format-tab {
+            padding: 1rem 2rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+        .format-tab.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+        .format-tab:hover {
+            color: #2563eb;
+        }
+        .format-section {
+            display: none;
+        }
+        .format-section.active {
+            display: block;
+        }
+        .format-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid #2563eb;
+        }
+        .format-card h3 {
+            margin: 0 0 0.5rem 0;
+            color: #1f2937;
+        }
+        .format-card p {
+            margin: 0 0 1rem 0;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        .format-card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .chart-type-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-bar { background: #dbeafe; color: #1e40af; }
+        .badge-pie { background: #fef3c7; color: #92400e; }
+        .badge-line { background: #d1fae5; color: #065f46; }
+        .badge-table { background: #e5e7eb; color: #374151; }
+        .badge-excel { background: #dcfce7; color: #166534; }
+        .badge-pdf { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <a href="index.html" style="text-decoration: none; color: white; display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 1.5rem;">🚛</span>
+                    <span>ヒヤリハットナビ</span>
+                </a>
+            </div>
+            <div class="user-info" id="user-info" style="display: none;">
+                <span class="user-name" id="user-name"></span>
+                <span class="user-role" id="user-role"></span>
+                <button onclick="handleLogout()" class="logout-btn">ログアウト</button>
+            </div>
+        </div>
+        <div class="header-content">
+            <div style="flex: 1;">
+                <nav class="main-nav" id="main-nav">
+                    <a href="index.html" class="nav-link" id="input-link">📝 報告入力</a>
+                    <a href="dashboard.html" class="nav-link" id="dashboard-link">📊 ダッシュボード</a>
+                    <a href="analytics.html" class="nav-link" id="analytics-link">📈 分析</a>
+                    <a href="admin.html" class="nav-link" id="company-link">🏢 企業管理</a>
+                    <a href="admin-reports.html" class="nav-link" id="reports-link">📋 報告管理</a>
+                    <a href="admin-users.html" class="nav-link" id="users-link">👥 ユーザー管理</a>
+                    <a href="import-data.html" class="nav-link" id="import-data-link">📥 データインポート</a>
+                    <a href="admin-data-fix.html" class="nav-link" id="data-fix-link">🔧 データ修正</a>
+                    <a href="admin-format-management.html" class="nav-link active" id="format-link">🎨 フォーマット管理</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="admin-container">
+        <div class="admin-header">
+            <h1>🎨 フォーマット管理</h1>
+            <p style="color: #6b7280; margin-top: 0.5rem;">帳票出力と分析画面のフォーマットを管理します（システム管理者専用）</p>
+        </div>
+
+        <!-- タブ -->
+        <div class="format-tabs">
+            <button class="format-tab active" onclick="switchTab('report')">📋 帳票フォーマット</button>
+            <button class="format-tab" onclick="switchTab('analysis')">📈 分析フォーマット</button>
+        </div>
+
+        <!-- 帳票フォーマットセクション -->
+        <div id="report-section" class="format-section active">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0;">📋 帳票フォーマット一覧</h2>
+                <button class="btn btn-primary" onclick="openAddReportFormatModal()">+ 新規フォーマット追加</button>
+            </div>
+            <div id="report-formats-container">
+                <p style="text-align: center; color: #6b7280; padding: 2rem;">読み込み中...</p>
+            </div>
+        </div>
+
+        <!-- 分析フォーマットセクション -->
+        <div id="analysis-section" class="format-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0;">📈 分析フォーマット一覧</h2>
+                <button class="btn btn-primary" onclick="openAddAnalysisFormatModal()">+ 新規分析追加</button>
+            </div>
+            <div id="analysis-formats-container">
+                <p style="text-align: center; color: #6b7280; padding: 2rem;">読み込み中...</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2026 NLP協同組合</p>
+    </footer>
+    </div>
+
+    <!-- 帳票フォーマット追加/編集モーダル -->
+    <div class="modal" id="report-format-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="report-modal-title">帳票フォーマットを追加</h2>
+                <button class="modal-close" onclick="closeReportFormatModal()">×</button>
+            </div>
+            <form id="report-format-form">
+                <div class="form-group">
+                    <label for="report-name">フォーマット名 *</label>
+                    <input type="text" id="report-name" required placeholder="例: 月次報告書">
+                </div>
+                <div class="form-group">
+                    <label for="report-description">説明</label>
+                    <textarea id="report-description" rows="3" placeholder="例: 月ごとの報告件数とカテゴリ別集計"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="report-format-type">出力形式 *</label>
+                    <select id="report-format-type" required>
+                        <option value="excel">Excel (.xlsx)</option>
+                        <option value="pdf">PDF (.pdf)</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="submit" class="btn-submit" style="flex: 1;">💾 保存</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeReportFormatModal()" style="flex: 1;">キャンセル</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 分析フォーマット追加/編集モーダル -->
+    <div class="modal" id="analysis-format-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="analysis-modal-title">分析フォーマットを追加</h2>
+                <button class="modal-close" onclick="closeAnalysisFormatModal()">×</button>
+            </div>
+            <form id="analysis-format-form">
+                <div class="form-group">
+                    <label for="analysis-name">分析名 *</label>
+                    <input type="text" id="analysis-name" required placeholder="例: カテゴリ別報告件数">
+                </div>
+                <div class="form-group">
+                    <label for="analysis-description">説明</label>
+                    <textarea id="analysis-description" rows="3" placeholder="例: カテゴリごとの報告件数を棒グラフで表示"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="analysis-chart-type">グラフの種類 *</label>
+                    <select id="analysis-chart-type" required>
+                        <option value="bar">棒グラフ</option>
+                        <option value="pie">円グラフ</option>
+                        <option value="line">折れ線グラフ</option>
+                        <option value="table">テーブル</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="analysis-group-by">グループ化 *</label>
+                    <select id="analysis-group-by" required>
+                        <option value="category">カテゴリ</option>
+                        <option value="severity_rating">重要度</option>
+                        <option value="report_type">報告種類</option>
+                        <option value="month">月別</option>
+                        <option value="location_text">場所</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="analysis-display-order">表示順序</label>
+                    <input type="number" id="analysis-display-order" value="0" min="0">
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="submit" class="btn-submit" style="flex: 1;">💾 保存</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeAnalysisFormatModal()" style="flex: 1;">キャンセル</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Config -->
+    <script src="js/config.js?v=20260228k"></script>
+    
+    <!-- Auth -->
+    <script src="js/auth-supabase.js?v=20260317005"></script>
+    
+    <!-- 認証チェック実行 -->
+    <script>
+    (async function() {
+        if (typeof initializeApp === 'function') {
+            initializeApp();
+        }
+        const authenticated = await checkAuthentication();
+        if (!authenticated) {
+            // アクセス拒否の場合は処理が中断される
+        }
+    })();
+    </script>
+    
+    <!-- 共通ナビゲーション -->
+    <script src="js/common-navigation.js?v=20260411e"></script>
+    
+    <!-- ログアウト処理 -->
+    <script>
+    async function handleLogout() {
+        await window.supabaseClient.auth.signOut();
+        window.location.href = 'landing.html';
+    }
+    </script>
+    
+    <!-- Format Management Script -->
+    <script src="js/admin-format-management.js?v=20260412a"></script>
+</body>
+</html>

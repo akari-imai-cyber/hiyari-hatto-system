@@ -248,10 +248,27 @@
             </div>
         </div>
 
+        <!-- 一括操作バー -->
+        <div id="bulk-actions-bar" style="background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; display: none; align-items: center; gap: 1rem;">
+            <span id="selected-count" style="font-weight: 600; color: #92400e;">0 件選択中</span>
+            <button class="btn btn-danger" onclick="bulkDeleteUsers()" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                🗑️ 選択したユーザーを削除
+            </button>
+            <button class="btn btn-primary" onclick="bulkChangeRole()" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                👥 ロール一括変更
+            </button>
+            <button class="btn btn-secondary" onclick="clearSelection()" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                ✕ 選択解除
+            </button>
+        </div>
+
         <div class="users-table">
             <table>
                 <thead>
                     <tr>
+                        <th style="width: 50px;">
+                            <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll()" title="全選択/全解除">
+                        </th>
                         <th>氏名</th>
                         <th>メールアドレス</th>
                         <th>所属/部署</th>
@@ -262,7 +279,7 @@
                 </thead>
                 <tbody id="users-table-body">
                     <tr>
-                        <td colspan="6" style="text-align: center; padding: 2rem;">読み込み中...</td>
+                        <td colspan="7" style="text-align: center; padding: 2rem;">読み込み中...</td>
                     </tr>
                 </tbody>
             </table>
@@ -508,6 +525,6 @@
     </script>
     
     <!-- Admin Users Script -->
-    <script src="js/admin-users.js?v=20260412h"></script>
+    <script src="js/admin-users.js?v=20260412i"></script>
 </body>
 </html>
