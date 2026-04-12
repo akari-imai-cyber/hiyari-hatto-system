@@ -1,5 +1,5 @@
 /**
- * 共通ナビゲーション管理システム v20260411e
+ * 共通ナビゲーション管理システム v20260412n
  * 全HTMLページで使用される統一されたメニュー表示ロジック
  * 
  * 機能:
@@ -99,6 +99,13 @@
         if (dataFixLink) {
             dataFixLink.style.display = visibility['data-fix'] ? 'inline-block' : 'none';
             console.log(`📍 データ修正: ${visibility['data-fix'] ? '表示' : '非表示'}`);
+        }
+
+        // ⑨フォーマット管理リンク
+        const formatLink = document.getElementById('format-link');
+        if (formatLink) {
+            formatLink.style.display = visibility['format-management'] ? 'inline-block' : 'none';
+            console.log(`📍 フォーマット管理: ${visibility['format-management'] ? '表示' : '非表示'}`);
         }
 
         console.log(`✅ [Navigation] ${role} 用のメニュー表示完了`);
