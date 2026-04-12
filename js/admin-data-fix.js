@@ -49,8 +49,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         // ユーザー情報取得
         const { data: profile, error: profileError } = await window.supabaseClient
-            .from('users')
-            .select('role, company_id, companies(name)')
+            .from('profiles')
+            .select('role, company_id')
             .eq('id', session.user.id)
             .single();
 
