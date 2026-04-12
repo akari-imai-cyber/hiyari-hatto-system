@@ -687,7 +687,7 @@ textarea.form-control {
 
     .logo {
         font-size: 1.5rem;
-        margin-bottom: 1rem;
+        margin-bottom: 0;
     }
 
     .nav-link {
