@@ -391,6 +391,85 @@
         </div>
     </div>
 
+    <!-- ユーザー詳細モーダル -->
+    <div class="modal" id="detail-user-modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>👤 ユーザー詳細情報</h2>
+                <button class="modal-close" onclick="closeDetailUserModal()">×</button>
+            </div>
+
+            <div style="padding: 1.5rem;">
+                <!-- 基本情報 -->
+                <div style="background: #f9fafb; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1rem; color: #374151;">基本情報</h3>
+                    <div style="display: grid; gap: 0.75rem;">
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem;">
+                            <span style="color: #6b7280; font-weight: 500;">氏名</span>
+                            <span id="detail-full-name" style="font-weight: 600;">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem;">
+                            <span style="color: #6b7280; font-weight: 500;">メールアドレス</span>
+                            <span id="detail-email" style="font-family: monospace;">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem;">
+                            <span style="color: #6b7280; font-weight: 500;">所属/部署</span>
+                            <span id="detail-department">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem;">
+                            <span style="color: #6b7280; font-weight: 500;">電話番号</span>
+                            <span id="detail-phone">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem;">
+                            <span style="color: #6b7280; font-weight: 500;">ロール</span>
+                            <span id="detail-role">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- アカウント情報 -->
+                <div style="background: #f9fafb; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1rem; color: #374151;">アカウント情報</h3>
+                    <div style="display: grid; gap: 0.75rem;">
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem;">
+                            <span style="color: #6b7280; font-weight: 500;">アカウント作成日</span>
+                            <span id="detail-created-at">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem;">
+                            <span style="color: #6b7280; font-weight: 500;">最終更新日</span>
+                            <span id="detail-updated-at">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem;">
+                            <span style="color: #6b7280; font-weight: 500;">ユーザーID</span>
+                            <span id="detail-user-id" style="font-family: monospace; font-size: 0.75rem; color: #9ca3af;">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem;">
+                            <span style="color: #6b7280; font-weight: 500;">企業ID</span>
+                            <span id="detail-company-id" style="font-family: monospace; font-size: 0.75rem; color: #9ca3af;">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 活動情報 -->
+                <div style="background: #eff6ff; border-radius: 8px; padding: 1rem;">
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1rem; color: #374151;">活動情報</h3>
+                    <div style="display: grid; gap: 0.75rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #6b7280; font-weight: 500;">📝 登録した報告件数</span>
+                            <span id="detail-report-count" style="font-size: 1.5rem; font-weight: 700; color: #2563eb;">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ボタン -->
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button class="btn btn-primary" onclick="openEditUserModalFromDetail()" style="flex: 1;">✏️ 編集する</button>
+                    <button class="btn btn-secondary" onclick="closeDetailUserModal()" style="flex: 1;">閉じる</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
@@ -429,6 +508,6 @@
     </script>
     
     <!-- Admin Users Script -->
-    <script src="js/admin-users.js?v=20260412g"></script>
+    <script src="js/admin-users.js?v=20260412h"></script>
 </body>
 </html>
