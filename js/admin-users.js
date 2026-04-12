@@ -5,6 +5,8 @@
 // グローバル変数
 let currentCompanyId = null;
 let currentUserRole = null;
+let allUsers = []; // 全ユーザーデータを保持
+let filteredUsers = []; // フィルタ後のユーザーデータ
 
 // 初期化
 document.addEventListener('DOMContentLoaded', async () => {
@@ -75,45 +77,128 @@ async function loadUsers() {
     try {
         const supabaseClient = window.supabaseClient || window.supabase;
         
-    // profiles テーブルからユーザーを取得
-let query = supabaseClient
-    .from('profiles')
-    .select('*');
-
-// admin でない場合のみ company_id でフィルタリング
-if (currentUserRole !== 'admin' && currentCompanyId) {
-    query = query.eq('company_id', currentCompanyId);
-}
-
-const { data: users, error } = await query.order('created_at', { ascending: false });
-
+        // profiles テーブルからユーザーを取得
+        let query = supabaseClient
+            .from('profiles')
+            .select('*');
+        
+        // admin でない場合のみ company_id でフィルタリング
+        if (currentUserRole !== 'admin' && currentCompanyId) {
+            query = query.eq('company_id', currentCompanyId);
+        }
+        
+        const { data: users, error } = await query.order('created_at', { ascending: false });
         
         if (error) throw error;
         
-        if (!users || users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem;">ユーザーが登録されていません</td></tr>';
-            return;
-        }
+        // デバッグ: 取得したユーザーデータを確認
+        console.log('🔍 取得したユーザー数:', users?.length);
+        console.log('🔍 全ユーザーデータ:', users);
+        
+        // akari-imaiのデータを特定
+        const akariUser = users?.find(u => u.email === 'akari-imai@tehara.co.jp');
+        console.log('🔍 akari-imai@tehara.co.jp のデータ:', akariUser);
+        console.log('🔍 akari-imaiのrole:', akariUser?.role);
+        
+        // グローバル変数に保存
+        allUsers = users || [];
+        filteredUsers = allUsers;
         
         // テーブルに表示
-        tbody.innerHTML = users.map(user => `
-            <tr>
-                <td>${user.email || '未設定'}</td>
-                <td>
-                    <span class="badge ${user.role === 'company_admin' ? 'badge-admin' : 'badge-user'}">
-                        ${user.role === 'company_admin' ? '管理者' : '一般ユーザー'}
-                    </span>
-                </td>
-                <td>${new Date(user.created_at).toLocaleDateString('ja-JP')}</td>
-                <td>
-                    ${user.role !== 'company_admin' ? `<button class="btn-delete" onclick="deleteUser('${user.id}', '${user.email}')">削除</button>` : ''}
-                </td>
-            </tr>
-        `).join('');
+        displayUsers(filteredUsers);
+        
+        // カウント更新
+        updateUserCount();
         
     } catch (error) {
         console.error('❌ ユーザー読み込みエラー:', error);
         tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: #ef4444;">ユーザーの読み込みに失敗しました</td></tr>';
+    }
+}
+
+// ユーザーを表示
+function displayUsers(users) {
+    const tbody = document.getElementById('users-table-body');
+    
+    if (!users || users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem;">ユーザーが登録されていません</td></tr>';
+        return;
+    }
+    
+    // デバッグ: 表示直前のデータを確認
+    console.log('📋 displayUsers() - 表示するユーザー数:', users.length);
+    const akariInDisplay = users.find(u => u.email === 'akari-imai@tehara.co.jp');
+    console.log('📋 表示データ内のakari-imai:', akariInDisplay);
+    console.log('📋 akari-imaiのrole:', akariInDisplay?.role);
+    console.log('📋 getRoleLabel結果:', getRoleLabel(akariInDisplay?.role));
+    console.log('📋 getRoleBadgeClass結果:', getRoleBadgeClass(akariInDisplay?.role));
+    
+    tbody.innerHTML = users.map(user => `
+        <tr>
+            <td>${user.email || '未設定'}</td>
+            <td>
+                <span class="badge ${getRoleBadgeClass(user.role)}">
+                    ${getRoleLabel(user.role)}
+                </span>
+            </td>
+            <td>${new Date(user.created_at).toLocaleDateString('ja-JP')}</td>
+            <td>
+                <button class="btn btn-primary" onclick="openEditUserModal('${user.id}')" style="margin-right: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem;">編集</button>
+                ${user.role !== 'admin' ? `<button class="btn btn-danger" onclick="deleteUser('${user.id}', '${user.email}')" style="padding: 0.5rem 1rem; font-size: 0.875rem;">削除</button>` : ''}
+            </td>
+        </tr>
+    `).join('');
+}
+
+// ロールのバッジクラスを取得
+function getRoleBadgeClass(role) {
+    console.log(`🎨 getRoleBadgeClass("${role}") - 型: ${typeof role}`);
+    if (role === 'admin') return 'badge-admin';
+    if (role === 'company_admin') return 'badge-admin';
+    return 'badge-user';
+}
+
+// ロールのラベルを取得
+function getRoleLabel(role) {
+    console.log(`🏷️ getRoleLabel("${role}") - 型: ${typeof role}`);
+    if (role === 'admin') return 'システム管理者';
+    if (role === 'company_admin') return '企業管理者';
+    return '一般ユーザー';
+}
+
+// フィルタを適用
+function filterUsers() {
+    const searchText = document.getElementById('search-input').value.toLowerCase();
+    const roleFilter = document.getElementById('role-filter').value;
+    
+    filteredUsers = allUsers.filter(user => {
+        // メールアドレス検索
+        const matchesSearch = !searchText || (user.email && user.email.toLowerCase().includes(searchText));
+        
+        // ロールフィルタ
+        const matchesRole = !roleFilter || user.role === roleFilter;
+        
+        return matchesSearch && matchesRole;
+    });
+    
+    displayUsers(filteredUsers);
+    updateUserCount();
+}
+
+// フィルタをリセット
+function resetFilters() {
+    document.getElementById('search-input').value = '';
+    document.getElementById('role-filter').value = '';
+    filteredUsers = allUsers;
+    displayUsers(filteredUsers);
+    updateUserCount();
+}
+
+// ユーザー数を更新
+function updateUserCount() {
+    const countElement = document.getElementById('user-count');
+    if (countElement) {
+        countElement.textContent = `${filteredUsers.length} / ${allUsers.length} 件`;
     }
 }
 
