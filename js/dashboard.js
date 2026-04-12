@@ -696,10 +696,10 @@ function applyAdvancedFilter() {
     console.log('✅ フィルタ結果:', `${filteredReports.length}/${allReports.length}件`);
     
     // テーブルを再描画
-    renderReportsTable(filteredReports);
+    displayReports(filteredReports);
     
     // サマリーカードを更新
-    updateSummaryCards(filteredReports);
+    updateSummary();
     
     // フィルタが適用されたことを通知
     const activeFiltersCount = [statusFilter, categoryFilter, severityFilter, dateFromFilter, dateToFilter, reporterFilter].filter(f => f).length;
@@ -721,10 +721,10 @@ function resetAllFilters() {
     filteredReports = [];
     
     // テーブルを再描画
-    renderReportsTable(allReports);
+    displayReports(allReports);
     
     // サマリーカードを更新
-    updateSummaryCards(allReports);
+    updateSummary();
     
     console.log('🔄 フィルタをリセットしました');
     showToast('🔄 フィルタをリセットしました');
