@@ -4,10 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>フォーマット管理 - ヒヤリハットナビ</title>
-    <link rel="stylesheet" href="css/style.css?v=20260412p">
-    <link rel="stylesheet" href="css/dashboard.css?v=20260412p">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        /* フォーマット管理画面専用：デスクトップでヘッダーを1行に */
+        @media (min-width: 768px) {
+            .header-right {
+                flex-direction: row;
+                align-items: center;
+                gap: 1rem;
+            }
+        }
+        
         .format-tabs {
             display: flex;
             gap: 1rem;
@@ -122,7 +131,7 @@
 <body>
     <div class="app-container">
     <header class="header">
-        <div class="container header-container">
+        <div class="header-content">
             <a href="landing.html" class="back-to-top">← トップページに戻る</a>
             <h1 class="logo">🚛 ヒヤリハットナビ</h1>
             <div class="header-right">
