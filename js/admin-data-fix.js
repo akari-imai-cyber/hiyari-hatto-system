@@ -15,58 +15,58 @@ document.addEventListener('DOMContentLoaded', async function() {
     console.log('📊 データ修正ページ読み込み開始');
     
     try {
-        // Supabase初期化確認
-        if (typeof window.supabaseClient === 'undefined') {
-            await window.initializeApp();
+        // Supabaseクライアント初期化を待つ
+        if (typeof initializeApp === 'function') {
+            await initializeApp();
+            console.log('✅ Supabase初期化完了');
         }
 
-        // 認証チェック
+        // Supabaseクライアント確認
+        if (typeof window.supabaseClient === 'undefined') {
+            console.error('❌ Supabaseクライアントが未定義');
+            alert('システムエラー: Supabaseの初期化に失敗しました。\n\nページをリロードしてください。');
+            return;
+        }
+        console.log('✅ Supabaseクライアント確認完了');
+
+        // 認証チェック（auth-supabase.jsを使用）
+        const authenticated = await checkAuthentication();
+        if (!authenticated) {
+            console.log('❌ 認証失敗: ログインページにリダイレクト');
+            return; // checkAuthentication()が自動的にリダイレクト
+        }
+        console.log('✅ 認証成功');
+
+        // セッション取得
         const { data: { session } } = await window.supabaseClient.auth.getSession();
         if (!session) {
-            alert('ログインが必要です');
-            window.location.href = 'login.html';
+            alert('セッションの取得に失敗しました');
+            window.location.href = 'index.html';
             return;
         }
 
         currentUser = session.user;
 
         // ユーザー情報取得
-        const { data: profile } = await window.supabaseClient
+        const { data: profile, error: profileError } = await window.supabaseClient
             .from('users')
             .select('role, company_id, companies(name)')
             .eq('id', session.user.id)
             .single();
 
-        if (!profile) {
-            alert('ユーザー情報の取得に失敗しました');
+        if (profileError || !profile) {
+            console.error('❌ プロフィール取得エラー:', profileError);
+            alert('ユーザー情報の取得に失敗しました: ' + (profileError?.message || '不明なエラー'));
             return;
         }
+
+        console.log('✅ ユーザー情報取得成功:', { role: profile.role, email: session.user.email });
 
         // 管理者権限チェック
         if (profile.role !== 'admin' && profile.role !== 'company_admin') {
             alert('この機能は管理者のみ利用できます');
             window.location.href = 'dashboard.html';
             return;
-        }
-
-        // ユーザー情報表示
-        document.getElementById('user-email').textContent = session.user.email;
-        if (profile.companies) {
-            document.getElementById('company-name').textContent = profile.companies.name;
-        }
-
-        // ナビゲーション表示制御
-        if (profile.role === 'admin') {
-            document.getElementById('admin-link').style.display = 'inline-block';
-            document.getElementById('admin-reports-link').style.display = 'inline-block';
-            document.getElementById('admin-users-link').style.display = 'inline-block';
-            document.getElementById('import-data-link').style.display = 'inline-block';
-            document.getElementById('data-fix-link').style.display = 'inline-block';
-        } else if (profile.role === 'company_admin') {
-            document.getElementById('admin-reports-link').style.display = 'inline-block';
-            document.getElementById('admin-users-link').style.display = 'inline-block';
-            document.getElementById('import-data-link').style.display = 'inline-block';
-            document.getElementById('data-fix-link').style.display = 'inline-block';
         }
 
         // 統計情報を取得
