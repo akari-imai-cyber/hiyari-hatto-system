@@ -94,9 +94,11 @@
                         <option value="4">重大度 4</option>
                         <option value="5">重大度 5</option>
                     </select>
-                    <input type="date" id="date-from-filter" class="form-control" placeholder="開始日" style="flex: 0 0 auto; min-width: 140px;">
-                    <span style="margin: 0 5px;">〜</span>
-                    <input type="date" id="date-to-filter" class="form-control" placeholder="終了日" style="flex: 0 0 auto; min-width: 140px;">
+                    <div style="display: flex; align-items: center; gap: 5px; flex: 0 0 auto; white-space: nowrap;">
+                        <input type="date" id="date-from-filter" class="form-control" placeholder="開始日" style="width: 150px;">
+                        <span style="color: #666;">〜</span>
+                        <input type="date" id="date-to-filter" class="form-control" placeholder="終了日" style="width: 150px;">
+                    </div>
                     <input type="text" id="reporter-filter" class="form-control" placeholder="報告者名で検索" style="flex: 0 0 auto; min-width: 150px;">
                     <button class="btn btn-primary" onclick="applyAdvancedFilter()">🔍 フィルタ適用</button>
                     <button class="btn btn-secondary" onclick="resetAllFilters()">🔄 リセット</button>
