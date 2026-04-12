@@ -91,15 +91,6 @@ async function loadUsers() {
         
         if (error) throw error;
         
-        // デバッグ: 取得したユーザーデータを確認
-        console.log('🔍 取得したユーザー数:', users?.length);
-        console.log('🔍 全ユーザーデータ:', users);
-        
-        // akari-imaiのデータを特定
-        const akariUser = users?.find(u => u.email === 'akari-imai@tehara.co.jp');
-        console.log('🔍 akari-imai@tehara.co.jp のデータ:', akariUser);
-        console.log('🔍 akari-imaiのrole:', akariUser?.role);
-        
         // グローバル変数に保存
         allUsers = users || [];
         filteredUsers = allUsers;
@@ -125,14 +116,6 @@ function displayUsers(users) {
         return;
     }
     
-    // デバッグ: 表示直前のデータを確認
-    console.log('📋 displayUsers() - 表示するユーザー数:', users.length);
-    const akariInDisplay = users.find(u => u.email === 'akari-imai@tehara.co.jp');
-    console.log('📋 表示データ内のakari-imai:', akariInDisplay);
-    console.log('📋 akari-imaiのrole:', akariInDisplay?.role);
-    console.log('📋 getRoleLabel結果:', getRoleLabel(akariInDisplay?.role));
-    console.log('📋 getRoleBadgeClass結果:', getRoleBadgeClass(akariInDisplay?.role));
-    
     tbody.innerHTML = users.map(user => `
         <tr>
             <td>${user.email || '未設定'}</td>
@@ -152,7 +135,6 @@ function displayUsers(users) {
 
 // ロールのバッジクラスを取得
 function getRoleBadgeClass(role) {
-    console.log(`🎨 getRoleBadgeClass("${role}") - 型: ${typeof role}`);
     if (role === 'admin') return 'badge-admin';
     if (role === 'company_admin') return 'badge-admin';
     return 'badge-user';
@@ -160,7 +142,6 @@ function getRoleBadgeClass(role) {
 
 // ロールのラベルを取得
 function getRoleLabel(role) {
-    console.log(`🏷️ getRoleLabel("${role}") - 型: ${typeof role}`);
     if (role === 'admin') return 'システム管理者';
     if (role === 'company_admin') return '企業管理者';
     return '一般ユーザー';
@@ -335,6 +316,178 @@ document.getElementById('add-user-form')?.addEventListener('submit', async (e) =
         
         submitBtn.disabled = false;
         submitBtn.textContent = '登録する';
+    }
+});
+
+// グローバル変数: 編集中のユーザーID
+let editingUserId = null;
+
+// ユーザー編集モーダルを開く
+async function openEditUserModal(userId) {
+    console.log('✏️ ユーザー編集モーダルを開く:', userId);
+    editingUserId = userId;
+    
+    try {
+        const supabaseClient = window.supabaseClient || window.supabase;
+        
+        // ユーザー情報を取得
+        const { data: user, error } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+        
+        if (error) throw error;
+        
+        console.log('📋 編集対象ユーザー:', user);
+        
+        // フォームに値を設定
+        document.getElementById('edit-user-email').value = user.email || '';
+        document.getElementById('edit-user-name').value = user.full_name || '';
+        document.getElementById('edit-user-role').value = user.role || 'company_user';
+        
+        // パスワードリセットセクションを非表示
+        document.getElementById('reset-password-check').checked = false;
+        document.getElementById('password-reset-section').style.display = 'none';
+        document.getElementById('edit-user-password').value = '';
+        
+        // ロール変更警告を非表示
+        document.getElementById('role-change-warning').style.display = 'none';
+        
+        // モーダルを開く
+        const modal = document.getElementById('edit-user-modal');
+        modal.classList.add('active');
+        
+    } catch (error) {
+        console.error('❌ ユーザー情報取得エラー:', error);
+        alert('❌ ユーザー情報の取得に失敗しました。');
+    }
+}
+
+// ユーザー編集モーダルを閉じる
+function closeEditUserModal() {
+    const modal = document.getElementById('edit-user-modal');
+    modal.classList.remove('active');
+    editingUserId = null;
+}
+
+// パスワードリセットセクションの表示/非表示
+function togglePasswordReset() {
+    const checkbox = document.getElementById('reset-password-check');
+    const section = document.getElementById('password-reset-section');
+    const passwordInput = document.getElementById('edit-user-password');
+    
+    if (checkbox.checked) {
+        section.style.display = 'block';
+        passwordInput.required = true;
+    } else {
+        section.style.display = 'none';
+        passwordInput.required = false;
+        passwordInput.value = '';
+    }
+}
+
+// ロール変更時の警告表示
+document.getElementById('edit-user-role')?.addEventListener('change', function() {
+    const warning = document.getElementById('role-change-warning');
+    warning.style.display = 'block';
+    setTimeout(() => {
+        warning.style.display = 'none';
+    }, 3000);
+});
+
+// ユーザー編集フォーム送信
+document.getElementById('edit-user-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    if (!editingUserId) {
+        alert('❌ 編集対象のユーザーIDが見つかりません。');
+        return;
+    }
+    
+    const submitBtn = document.getElementById('edit-submit-btn');
+    const email = document.getElementById('edit-user-email').value.trim();
+    const name = document.getElementById('edit-user-name').value.trim();
+    const role = document.getElementById('edit-user-role').value;
+    const resetPassword = document.getElementById('reset-password-check').checked;
+    const password = document.getElementById('edit-user-password').value.trim();
+    
+    // バリデーション
+    if (!email || !role) {
+        alert('❌ 必須項目を入力してください。');
+        return;
+    }
+    
+    // パスワードリセットのバリデーション
+    if (resetPassword) {
+        if (password.length < 8) {
+            alert('❌ パスワードは8文字以上にしてください。');
+            return;
+        }
+        
+        if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+            alert('❌ パスワードは英大文字・小文字・数字を含む必要があります。');
+            return;
+        }
+    }
+    
+    // 確認ダイアログ
+    const confirmMessage = resetPassword 
+        ? `${email} の情報を更新し、パスワードをリセットしますか？`
+        : `${email} の情報を更新しますか？`;
+    
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    // ボタン無効化
+    submitBtn.disabled = true;
+    submitBtn.textContent = '保存中...';
+    
+    try {
+        const supabaseClient = window.supabaseClient || window.supabase;
+        
+        // 1. プロフィール情報を更新
+        const updateData = {
+            email: email,
+            role: role
+        };
+        
+        if (name) {
+            updateData.full_name = name;
+        }
+        
+        const { error: profileError } = await supabaseClient
+            .from('profiles')
+            .update(updateData)
+            .eq('id', editingUserId);
+        
+        if (profileError) throw profileError;
+        
+        console.log('✅ プロフィール更新成功');
+        
+        // 2. パスワードリセット（管理者権限が必要）
+        if (resetPassword) {
+            // Note: Supabase の管理者APIを使う必要があります
+            // ここでは簡易的な実装として、パスワード更新をスキップ
+            console.log('⚠️ パスワードリセットは管理者APIが必要です');
+            alert('✅ ユーザー情報を更新しました。\n\n⚠️ パスワードリセットは管理者権限が必要なため、別途手動で行ってください。');
+        } else {
+            alert('✅ ユーザー情報を更新しました。');
+        }
+        
+        // モーダルを閉じる
+        closeEditUserModal();
+        
+        // ユーザー一覧を再読み込み
+        await loadUsers();
+        
+    } catch (error) {
+        console.error('❌ ユーザー更新エラー:', error);
+        alert(`❌ ユーザー情報の更新に失敗しました: ${error.message}`);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '💾 変更を保存';
     }
 });
 
