@@ -40,6 +40,7 @@
 | [USER_MANAGEMENT_GUIDE.md](USER_MANAGEMENT_GUIDE.md) | **システム管理者** | ユーザー管理機能の使い方 |
 | [USER_MANAGEMENT_COMPANY_ADMIN.md](USER_MANAGEMENT_COMPANY_ADMIN.md) | **企業管理者** | 自社ユーザー管理の使い方 |
 | [COMPANY_ADMIN_GUIDE.md](COMPANY_ADMIN_GUIDE.md) | **企業管理者** | 報告編集機能の使い方 |
+| [DATA_FIX_TEST_GUIDE.md](DATA_FIX_TEST_GUIDE.md) | **開発者** | データ修正機能（AI一括修正）の検証手順 |
 
 **📖 今すぐ読むべきマニュアル**:
 - **ドライバー（初めての方）** → [📘 DRIVER_MANUAL.html](DRIVER_MANUAL.html) を開く
