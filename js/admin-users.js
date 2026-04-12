@@ -426,9 +426,6 @@ function openEditUserModalFromDetail() {
     openEditUserModal(detailUserId);
 }
 
-// グローバル変数: 編集中のユーザーID
-let editingUserId = null;
-
 // ユーザー編集モーダルを開く
 async function openEditUserModal(userId) {
     console.log('✏️ ユーザー編集モーダルを開く:', userId);
