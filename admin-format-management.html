@@ -72,6 +72,51 @@
         .badge-table { background: #e5e7eb; color: #374151; }
         .badge-excel { background: #dcfce7; color: #166534; }
         .badge-pdf { background: #fee2e2; color: #991b1b; }
+        
+        /* モーダル関連のスタイル */
+        .modal {
+            display: none !important; /* デフォルトは非表示 */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex !important; /* active の時だけ表示 */
+        }
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .modal-header h2 {
+            margin: 0;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        .modal-close:hover {
+            color: #1f2937;
+        }
     </style>
 </head>
 <body>
@@ -247,6 +292,6 @@
     </script>
     
     <!-- Format Management Script -->
-    <script src="js/admin-format-management.js?v=20260412L"></script>
+    <script src="js/admin-format-management.js?v=20260412m"></script>
 </body>
 </html>
