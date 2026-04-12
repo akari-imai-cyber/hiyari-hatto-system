@@ -38,9 +38,9 @@
     <!-- ログアウト処理 -->
     <script>
     async function handleLogout() {
-    await window.supabaseClient.auth.signOut();
-    window.location.href = 'landing.html';
-}
+        await window.supabaseClient.auth.signOut();
+        window.location.href = 'landing.html';
+    }
     </script>
 </head>
 <body>
@@ -72,8 +72,8 @@
         <main class="main-content dashboard-content">
             <div class="dashboard-header">
                 <h1>管理者ダッシュボード</h1>
-                <div class="filter-controls">
-                    <select id="status-filter" class="form-control">
+                <div class="filter-controls" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                    <select id="status-filter" class="form-control" style="flex: 0 0 auto; min-width: 150px;">
                         <option value="">すべてのステータス</option>
                         <option value="step1_complete">基本情報のみ</option>
                         <option value="step2_complete">詳細入力済</option>
@@ -81,13 +81,26 @@
                         <option value="in_progress">対応中</option>
                         <option value="completed">完了</option>
                     </select>
-                    <select id="category-filter" class="form-control">
+                    <select id="category-filter" class="form-control" style="flex: 0 0 auto; min-width: 150px;">
                         <option value="">すべてのカテゴリ</option>
                         <option value="driving">走行中</option>
                         <option value="loading">荷役中</option>
                     </select>
-                    <button class="btn btn-primary" onclick="refreshReports()">🔄 更新</button>
-                    <button class="btn btn-success" onclick="exportToCSV()">📥 CSVエクスポート</button>
+                    <select id="severity-filter" class="form-control" style="flex: 0 0 auto; min-width: 120px;">
+                        <option value="">すべての重大度</option>
+                        <option value="1">重大度 1</option>
+                        <option value="2">重大度 2</option>
+                        <option value="3">重大度 3</option>
+                        <option value="4">重大度 4</option>
+                        <option value="5">重大度 5</option>
+                    </select>
+                    <input type="date" id="date-from-filter" class="form-control" placeholder="開始日" style="flex: 0 0 auto; min-width: 140px;">
+                    <span style="margin: 0 5px;">〜</span>
+                    <input type="date" id="date-to-filter" class="form-control" placeholder="終了日" style="flex: 0 0 auto; min-width: 140px;">
+                    <input type="text" id="reporter-filter" class="form-control" placeholder="報告者名で検索" style="flex: 0 0 auto; min-width: 150px;">
+                    <button class="btn btn-primary" onclick="applyAdvancedFilter()">🔍 フィルタ適用</button>
+                    <button class="btn btn-secondary" onclick="resetAllFilters()">🔄 リセット</button>
+                    <button class="btn btn-success" onclick="openExportColumnsModal()">📊 データエクスポート</button>
                 </div>
             </div>
 
@@ -155,8 +168,45 @@
         </div>
     </div>
 
+    <!-- カスタム列選択モーダル -->
+    <div id="export-columns-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>📊 エクスポート列の選択</h2>
+                <button class="modal-close" onclick="closeExportColumnsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: #666; margin-bottom: 20px;">エクスポートする列を選択してください。</p>
+                
+                <!-- プリセットボタン -->
+                <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="selectPreset('basic')">📋 基本項目</button>
+                    <button class="btn btn-primary" onclick="selectPreset('detailed')">📊 詳細項目</button>
+                    <button class="btn btn-primary" onclick="selectPreset('all')">📁 全項目</button>
+                    <button class="btn btn-secondary" onclick="selectPreset('none')">🔲 すべて解除</button>
+                </div>
+                
+                <!-- 列選択チェックボックス -->
+                <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
+                    <div id="columns-checkboxes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px;">
+                        <!-- チェックボックスが動的に追加されます -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeExportColumnsModal()">キャンセル</button>
+                <button class="btn btn-success" onclick="executeExportWithColumns('csv')">📥 CSVエクスポート</button>
+                <button class="btn btn-success" onclick="executeExportWithColumns('excel')" style="background: #10b981;">📊 Excelエクスポート</button>
+                <button class="btn btn-success" onclick="executeExportWithColumns('pdf')" style="background: #ef4444;">📄 PDFエクスポート</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="js/config.js?v=20260226"></script>
-    <script src="js/dashboard.js?v=20260228o"></script>
+    <script src="js/dashboard.js?v=20260412b"></script>
 </body>
 </html>
