@@ -61,9 +61,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentUserRole = auth.role;
     console.log('👤 現在の権限:', currentUserRole);
     
+    // モーダルが開いている場合は閉じる（初期化時の安全処理）
+    // 複数回実行して確実に閉じる
+    const closeAllModals = () => {
+        document.getElementById('report-format-modal')?.classList.remove('active');
+        document.getElementById('analysis-format-modal')?.classList.remove('active');
+    };
+    closeAllModals();
+    
     // フォーマット一覧を読み込み
     await loadReportFormats();
+    closeAllModals(); // 再度閉じる
+    
     await loadAnalysisFormats();
+    closeAllModals(); // 再度閉じる
+    
+    // 最終確認（遅延実行）
+    setTimeout(closeAllModals, 500);
 });
 
 // タブ切り替え
@@ -137,11 +151,11 @@ function displayReportFormats(formats) {
                     作成日: ${new Date(format.created_at).toLocaleDateString('ja-JP')}
                 </div>
                 <div class="format-card-actions">
-                    <button class="btn btn-primary" onclick="editReportFormat('${format.id}')" style="padding: 0.5rem 1rem; font-size: 0.875rem;">✏️ 編集</button>
-                    <button class="btn ${format.is_active ? 'btn-secondary' : 'btn-primary'}" onclick="toggleReportFormatStatus('${format.id}', ${format.is_active})" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                    <button class="btn btn-primary" onclick="editReportFormat(&quot;${format.id}&quot;)" style="padding: 0.5rem 1rem; font-size: 0.875rem;">✏️ 編集</button>
+                    <button class="btn ${format.is_active ? 'btn-secondary' : 'btn-primary'}" onclick="toggleReportFormatStatus(&quot;${format.id}&quot;, ${format.is_active})" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
                         ${format.is_active ? '🔄 無効化' : '✅ 有効化'}
                     </button>
-                    <button class="btn btn-danger" onclick="deleteReportFormat('${format.id}', '${format.name}')" style="padding: 0.5rem 1rem; font-size: 0.875rem;">🗑️ 削除</button>
+                    <button class="btn btn-danger" onclick="deleteReportFormat(&quot;${format.id}&quot;, &quot;${format.name}&quot;)" style="padding: 0.5rem 1rem; font-size: 0.875rem;">🗑️ 削除</button>
                 </div>
             </div>
         </div>
@@ -348,11 +362,11 @@ function displayAnalysisFormats(formats) {
                     グループ化: ${format.data_config.groupBy || '-'} | 集計: ${format.data_config.aggregate || '-'}
                 </div>
                 <div class="format-card-actions">
-                    <button class="btn btn-primary" onclick="editAnalysisFormat('${format.id}')" style="padding: 0.5rem 1rem; font-size: 0.875rem;">✏️ 編集</button>
-                    <button class="btn ${format.is_active ? 'btn-secondary' : 'btn-primary'}" onclick="toggleAnalysisFormatStatus('${format.id}', ${format.is_active})" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                    <button class="btn btn-primary" onclick="editAnalysisFormat(&quot;${format.id}&quot;)" style="padding: 0.5rem 1rem; font-size: 0.875rem;">✏️ 編集</button>
+                    <button class="btn ${format.is_active ? 'btn-secondary' : 'btn-primary'}" onclick="toggleAnalysisFormatStatus(&quot;${format.id}&quot;, ${format.is_active})" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
                         ${format.is_active ? '🔄 無効化' : '✅ 有効化'}
                     </button>
-                    <button class="btn btn-danger" onclick="deleteAnalysisFormat('${format.id}', '${format.name}')" style="padding: 0.5rem 1rem; font-size: 0.875rem;">🗑️ 削除</button>
+                    <button class="btn btn-danger" onclick="deleteAnalysisFormat(&quot;${format.id}&quot;, &quot;${format.name}&quot;)" style="padding: 0.5rem 1rem; font-size: 0.875rem;">🗑️ 削除</button>
                 </div>
             </div>
         </div>
