@@ -1282,8 +1282,6 @@ function executeExportWithColumns(format) {
         exportToCSVWithColumns();
     } else if (format === 'excel') {
         exportToExcelWithColumns();
-    } else if (format === 'pdf') {
-        exportToPDFWithColumns();
     }
 }
 
@@ -1378,64 +1376,6 @@ function exportToExcelWithColumns() {
     
     console.log('✅ Excelエクスポート完了:', `${dataToExport.length}件、${selectedColumns.length}列`);
     alert(`✅ Excelファイルをダウンロードしました（${dataToExport.length}件、${selectedColumns.length}列）`);
-}
-
-// 列選択対応のPDFエクスポート
-function exportToPDFWithColumns() {
-    const dataToExport = filteredReports.length > 0 ? filteredReports : allReports;
-    
-    if (dataToExport.length === 0) {
-        alert('エクスポートするデータがありません');
-        return;
-    }
-    
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('landscape', 'mm', 'a4');
-    
-    // 日本語フォント設定（簡易版）
-    doc.setFont('helvetica');
-    
-    // タイトル
-    const auth = window.getCurrentAuth ? window.getCurrentAuth() : {};
-    const companyName = auth.companyName || '報告データ';
-    doc.setFontSize(16);
-    doc.text(`${companyName} - ヒヤリハット報告`, 14, 15);
-    
-    // 選択された列のみのヘッダーとデータを生成
-    const selectedColumnDefs = ALL_COLUMNS.filter(col => selectedColumns.includes(col.key));
-    const headers = selectedColumnDefs.map(col => col.label);
-    
-    const rows = dataToExport.map(report => 
-        selectedColumnDefs.map(col => getColumnValue(report, col.key))
-    );
-    
-    // テーブル生成
-    doc.autoTable({
-        head: [headers],
-        body: rows,
-        startY: 25,
-        styles: {
-            font: 'helvetica',
-            fontSize: 8,
-            cellPadding: 2
-        },
-        headStyles: {
-            fillColor: [37, 99, 235],
-            textColor: 255,
-            fontStyle: 'bold'
-        },
-        columnStyles: headers.reduce((acc, _, i) => {
-            acc[i] = { cellWidth: 'auto' };
-            return acc;
-        }, {}),
-        margin: { top: 25 }
-    });
-    
-    const filename = generateFilename('pdf');
-    doc.save(filename);
-    
-    console.log('✅ PDFエクスポート完了:', `${dataToExport.length}件、${selectedColumns.length}列`);
-    alert(`✅ PDFファイルをダウンロードしました（${dataToExport.length}件、${selectedColumns.length}列）`);
 }
 
 // 列の値を取得
