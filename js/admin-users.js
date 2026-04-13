@@ -196,13 +196,50 @@ function updateUserCount() {
 }
 
 // モーダルを開く
-function openAddUserModal() {
+async function openAddUserModal() {
     const modal = document.getElementById('add-user-modal');
     modal.classList.add('active');
     
     // フォームをリセット
     document.getElementById('add-user-form').reset();
     document.getElementById('success-message').classList.remove('active');
+    
+    // システム管理者の場合は企業選択を表示
+    const companySelectionGroup = document.getElementById('company-selection-group');
+    const companySelect = document.getElementById('user-company');
+    
+    if (currentUserRole === 'admin') {
+        // 企業一覧を読み込み
+        try {
+            const supabaseClient = window.supabaseClient || window.supabase;
+            const { data: companies, error } = await supabaseClient
+                .from('companies')
+                .select('id, company_name, company_code')
+                .order('company_name');
+            
+            if (error) throw error;
+            
+            // ドロップダウンを設定
+            companySelect.innerHTML = '<option value="">-- 企業を選択してください --</option>';
+            companies.forEach(company => {
+                const option = document.createElement('option');
+                option.value = company.id;
+                option.textContent = `${company.company_name} (${company.company_code})`;
+                companySelect.appendChild(option);
+            });
+            
+            companySelectionGroup.style.display = 'block';
+            companySelect.required = true;
+            
+        } catch (error) {
+            console.error('❌ 企業一覧の読み込みエラー:', error);
+            alert('❌ 企業一覧の読み込みに失敗しました。');
+        }
+    } else {
+        // 企業管理者の場合は非表示
+        companySelectionGroup.style.display = 'none';
+        companySelect.required = false;
+    }
 }
 
 // モーダルを閉じる
@@ -222,6 +259,24 @@ document.getElementById('add-user-form')?.addEventListener('submit', async (e) =
     const phone = document.getElementById('user-phone').value.trim();
     const password = document.getElementById('user-password').value.trim();
     const role = document.getElementById('user-role').value;
+    
+    // company_idの決定
+    let targetCompanyId;
+    if (currentUserRole === 'admin') {
+        // システム管理者の場合は選択された企業ID
+        targetCompanyId = document.getElementById('user-company').value;
+        if (!targetCompanyId) {
+            alert('❌ 所属企業を選択してください。');
+            return;
+        }
+    } else {
+        // 企業管理者の場合は自分の企業ID
+        targetCompanyId = currentCompanyId;
+        if (!targetCompanyId) {
+            alert('❌ 企業情報が取得できません。再度ログインしてください。');
+            return;
+        }
+    }
     
     // バリデーション
     if (!name || !email || !password) {
@@ -255,7 +310,7 @@ document.getElementById('add-user-form')?.addEventListener('submit', async (e) =
                 emailRedirectTo: `${window.location.origin}/index.html`,
                 data: {
                     role: role,
-                    company_id: currentCompanyId
+                    company_id: targetCompanyId
                 }
             }
         });
@@ -286,7 +341,7 @@ document.getElementById('add-user-form')?.addEventListener('submit', async (e) =
                 department: department || null,
                 phone: phone || null,
                 role: role,
-                company_id: currentCompanyId
+                company_id: targetCompanyId
             })
             .select()
             .single();
@@ -607,13 +662,46 @@ async function deleteUser(userId, userEmail) {
     try {
         const supabaseClient = window.supabaseClient || window.supabase;
         
-        // profiles テーブルから削除
-        const { error: profileError } = await supabaseClient
+        // 1. このユーザーに関連する報告データを確認
+        const { data: reports, error: reportsCheckError } = await supabaseClient
+            .from('reports')
+            .select('id', { count: 'exact', head: true })
+            .eq('reporter_id', userId);
+        
+        if (reportsCheckError) {
+            console.warn('⚠️ 報告データ確認エラー:', reportsCheckError);
+        }
+        
+        // 2. 報告データがある場合は警告
+        const reportCount = reports || 0;
+        if (reportCount > 0) {
+            const confirmDelete = confirm(
+                `⚠️ このユーザーには ${reportCount} 件の報告データが紐付いています。\n\n` +
+                `削除すると、これらの報告データも削除される可能性があります。\n\n` +
+                `本当に削除しますか？`
+            );
+            if (!confirmDelete) {
+                return;
+            }
+        }
+        
+        // 3. profilesテーブルから削除（カスケード削除でreportsも削除される）
+        const { error: deleteError } = await supabaseClient
             .from('profiles')
             .delete()
             .eq('id', userId);
         
-        if (profileError) throw profileError;
+        if (deleteError) {
+            console.error('❌ 削除エラー詳細:', deleteError);
+            
+            // エラーコード27000の場合は、より詳しいメッセージを表示
+            if (deleteError.code === '27000') {
+                alert('❌ データベースの制約により削除できません。\n\nこのユーザーに紐付くデータを先に削除してください。');
+            } else {
+                throw deleteError;
+            }
+            return;
+        }
         
         // Auth ユーザーは削除しない（管理者権限が必要なため）
         // 実運用では Supabase の Admin API を使用して削除可能
@@ -623,7 +711,7 @@ async function deleteUser(userId, userEmail) {
         
     } catch (error) {
         console.error('❌ ユーザー削除エラー:', error);
-        alert('❌ ユーザーの削除に失敗しました。');
+        alert(`❌ ユーザーの削除に失敗しました。\n\nエラー: ${error.message || '不明なエラー'}`);
     }
 }
 
@@ -697,15 +785,35 @@ async function bulkDeleteUsers() {
     try {
         const supabaseClient = window.supabaseClient || window.supabase;
         
-        // 一括削除
-        const { error } = await supabaseClient
-            .from('profiles')
-            .delete()
-            .in('id', userIds);
+        // 各ユーザーを個別に削除（トリガーエラーを回避）
+        let successCount = 0;
+        let errorCount = 0;
         
-        if (error) throw error;
+        for (const userId of userIds) {
+            try {
+                const { error } = await supabaseClient
+                    .from('profiles')
+                    .delete()
+                    .eq('id', userId);
+                
+                if (error) {
+                    console.error(`❌ ユーザー削除失敗 (${userId}):`, error);
+                    errorCount++;
+                } else {
+                    successCount++;
+                }
+            } catch (err) {
+                console.error(`❌ 予期しないエラー (${userId}):`, err);
+                errorCount++;
+            }
+        }
         
-        alert(`✅ ${userIds.length} 件のユーザーを削除しました。`);
+        // 結果を表示
+        if (errorCount === 0) {
+            alert(`✅ ${successCount} 件のユーザーを削除しました。`);
+        } else {
+            alert(`⚠️ ${successCount} 件削除、${errorCount} 件失敗しました。\n\n失敗したユーザーは関連データがある可能性があります。`);
+        }
         
         // 選択解除
         clearSelection();
@@ -715,7 +823,7 @@ async function bulkDeleteUsers() {
         
     } catch (error) {
         console.error('❌ 一括削除エラー:', error);
-        alert('❌ ユーザーの削除に失敗しました。');
+        alert(`❌ ユーザーの削除に失敗しました。\n\nエラー: ${error.message || '不明なエラー'}`);
     }
 }
 
