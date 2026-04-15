@@ -290,11 +290,6 @@ document.getElementById('add-user-form')?.addEventListener('submit', async (e) =
         return;
     }
     
-    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
-        alert('❌ パスワードは英大文字・小文字・数字を含む必要があります。');
-        return;
-    }
-    
     // ボタン無効化
     submitBtn.disabled = true;
     submitBtn.textContent = '登録中...';
@@ -585,11 +580,6 @@ document.getElementById('edit-user-form')?.addEventListener('submit', async (e) 
     if (resetPassword) {
         if (password.length < 8) {
             alert('❌ パスワードは8文字以上にしてください。');
-            return;
-        }
-        
-        if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
-            alert('❌ パスワードは英大文字・小文字・数字を含む必要があります。');
             return;
         }
     }
