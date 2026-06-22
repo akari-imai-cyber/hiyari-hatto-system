@@ -1,11 +1,14 @@
 /**
- * 共通ナビゲーション管理システム v20260412n
+ * 共通ナビゲーション管理システム v20260517a
  * 全HTMLページで使用される統一されたメニュー表示ロジック
  * 
  * 機能:
  * - ロール別メニュー表示制御
  * - パスワード変更ボタン自動追加
  * - authCompleteイベントのフォールバック処理
+ * 
+ * 更新履歴:
+ * - 2026-05-17: 企業管理者に報告管理画面へのアクセスを許可
  */
 
 (function() {
@@ -38,9 +41,9 @@
             menus['data-fix'] = true;
             menus['format-management'] = true;  // ⑨フォーマット管理: 表示
         } else if (role === 'company_admin') {
-            // 企業管理者：④⑤⑨を非表示 → ①②③⑥⑦⑧ を表示
+            // 企業管理者：④⑨を非表示 → ①②③⑤⑥⑦⑧ を表示
             menus['admin'] = false;           // ④企業管理: 非表示
-            menus['admin-reports'] = false;   // ⑤報告管理: 非表示
+            menus['admin-reports'] = true;    // ⑤報告管理: 表示（自社データのみ）
             menus['admin-users'] = true;      // ⑥ユーザー管理: 表示
             menus['import-data'] = true;      // ⑦データインポート: 表示
             menus['data-fix'] = true;         // ⑧データ修正: 表示
